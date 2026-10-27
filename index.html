@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Weide – Sheep Herding</title>
+  <link href="fonts.css" rel="stylesheet">
+  <style>
+    html, body { margin: 0; height: 100%; background: #142016; }
+    body { display: flex; align-items: center; justify-content: center; overflow: hidden; }
+    canvas {
+      display: block;
+      border-radius: 8px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.55);
+      cursor: crosshair;
+      touch-action: none;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="game"></canvas>
+  <script>
+    // always load the newest game.js (avoids the browser using an old cached copy)
+    const js = document.createElement('script');
+    js.src = 'game.js?v=' + Date.now();
+    document.body.appendChild(js);
+  </script>
+</body>
+</html>
