@@ -63,7 +63,8 @@ window.WEIDE = (() => {
               sheepRadius: 50,    // sheep make way for him
               wolfFear: 120,      // wolves keep this far away from him
               petRadius: 32,      // the dog this close gets a pat (and wags its tail)
-              walkBack: 1 },      // starts walking back to the tractor this many hours before it leaves
+              walkBack: 1,        // starts walking back to the tractor this many hours before it leaves
+              shovelSpeed: 40 },  // winter: how fast he shovels the snow off the patio (px per second)
     fastForward: 4,          // speed multiplier while 'F' is on (daytime only)
     grass: { surplus: 1.3, minPatches: 3, maxPatches: 6, winterFactor: 0.85 }, // food in winter (0.85 = 15% less)
     summer: { dogDrain: 1.15 },                   // hot: the dog tires 15% faster

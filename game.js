@@ -180,6 +180,7 @@
     spawnQ: [],        // wolves waiting to arrive: { t, night }
     fast: false,       // fast-forward (daytime only)
     wolfAdj: 0,        // player's wolf setting: -50 .. +50 (%)
+    relax: false,      // relax mode: no wolves at all, just herding
     seasonStart: 0,    // season of day 1 (0 spring, 1 summer, 2 fall, 3 winter)
     snowLevel: 2,      // today's snowfall in winter: 0 none, 1 light, 2 moderate, 3 heavy
     lang: 'en',        // 'en' or 'de'
@@ -237,7 +238,13 @@
       howTo: 'HOW TO PLAY', options: 'OPTIONS', move: 'MOVE', keys: 'KEYS', or: 'or',
       clickDrag: 'click / drag on the pasture', pause: 'pause', fastDay: 'fast-forward the day',
       wolves: 'WOLVES', startSeason: 'START SEASON', startGame: 'START GAME', shuffle: 'SHUFFLE MAP',
+      relax: 'RELAX MODE', relaxOn: 'RELAX MODE', relaxLine: ['No wolves at all.', 'Just herding, for fun.'], relaxShort: 'relax mode',
+      nightOutRelax: (out) => `Night falls — ${out} sheep still outside. Bring them in, it's cold!`,
+      nightSafeRelax: 'All sheep are safe in the stable. Good night!',
+      tractorRelax: 'The farmer\'s tractor is here today.',
       pressEnter: 'or press ENTER', help: 'detailed gameplay',
+      resume: 'RESUME GAME', newGame: 'NEW GAME', welcomeBack: (d) => `Welcome back! Day ${d}.`,
+      savedHint: (d, n) => `ENTER: resume (day ${d}, ${n} sheep)  \u00B7  N: new game`,
       custom: (n) => `(${n} custom setting${n > 1 ? 's' : ''})`,
       wolvesExample: (n) => [`6 sheep: about ${n} wolves at night,`, 'half as many by day.'],
       difficulty: ['EASY', 'NORMAL', 'HARD', 'BRUTAL'],
@@ -253,7 +260,7 @@
         'Seasons change every 3 days. Summer days are long, winter days short and cold!',
         'No rams or no ewes left = game over.',
       ],
-      exit: 'EXIT', exitTitle: 'EXIT GAME?', exitLine1: 'Your flock will be lost.', exitLine2: 'Back to the main screen?',
+      exit: 'EXIT', exitTitle: 'EXIT GAME?', exitLine1: 'Your game will be saved.', exitLine2: 'Back to the main screen?',
       yes: 'YES', no: 'NO', paused: 'PAUSED', pausedLine: 'Click or press P to continue',
       gameOver: 'GAME OVER', cont: 'CONTINUE',
       overRows: ['Day reached', 'Largest flock', 'Lambs born', 'Killed by wolves', 'Starved / froze', 'Wolves setting'],
@@ -293,7 +300,13 @@
       howTo: 'SO GEHT’S', options: 'OPTIONEN', move: 'LAUFEN', keys: 'TASTEN', or: 'oder',
       clickDrag: 'klicken / ziehen auf der Weide', pause: 'Pause', fastDay: 'Tag vorspulen',
       wolves: 'WÖLFE', startSeason: 'JAHRESZEIT', startGame: 'SPIEL STARTEN', shuffle: 'NEUE KARTE',
+      relax: 'ENTSPANNT', relaxOn: 'ENTSPANNT', relaxLine: ['Gar keine Wölfe.', 'Einfach hüten, zum Spass.'], relaxShort: 'entspannt',
+      nightOutRelax: (out) => `Die Nacht bricht herein — ${out === 1 ? '1 Schaf ist' : out + ' Schafe sind'} noch draußen. Bring sie rein, es ist kalt!`,
+      nightSafeRelax: 'Alle Schafe sind sicher im Stall. Gute Nacht!',
+      tractorRelax: 'Heute ist der Traktor des Bauern da.',
       pressEnter: 'oder ENTER drücken', help: 'ausführliche Spielregeln',
+      resume: 'WEITERSPIELEN', newGame: 'NEUES SPIEL', welcomeBack: (d) => `Willkommen zurück! Tag ${d}.`,
+      savedHint: (d, n) => `ENTER: weiter (Tag ${d}, ${n === 1 ? '1 Schaf' : n + ' Schafe'})  \u00B7  N: neues Spiel`,
       custom: (n) => `(${n} eigene Einstellung${n > 1 ? 'en' : ''})`,
       wolvesExample: (n) => [`6 Schafe: etwa ${n} Wölfe nachts,`, 'tagsüber halb so viele.'],
       difficulty: ['LEICHT', 'NORMAL', 'SCHWER', 'BRUTAL'],
@@ -309,7 +322,7 @@
         'Alle 3 Tage wechselt die Jahreszeit. Sommertage sind lang, Wintertage kurz und kalt!',
         'Keine Widder oder keine Auen mehr = Spiel vorbei.',
       ],
-      exit: 'ENDE', exitTitle: 'SPIEL BEENDEN?', exitLine1: 'Deine Herde geht verloren.', exitLine2: 'Zurück zum Startbildschirm?',
+      exit: 'ENDE', exitTitle: 'SPIEL BEENDEN?', exitLine1: 'Dein Spiel wird gespeichert.', exitLine2: 'Zurück zum Startbildschirm?',
       yes: 'JA', no: 'NEIN', paused: 'PAUSE', pausedLine: 'Klicken oder P drücken zum Weiterspielen',
       gameOver: 'SPIEL VORBEI', cont: 'WEITER',
       overRows: ['Erreichter Tag', 'Größte Herde', 'Geborene Lämmer', 'Von Wölfen gerissen', 'Verhungert / erfroren', 'Wölfe-Einstellung'],
@@ -919,10 +932,13 @@
       const rock = { x: pos.x, y: pos.y, r, space: r, pts };
       rocks.push(rock); all.push(rock);
     }
+    rebuildSolids();
+    paintObstacleLayer();
+  }
+  function rebuildSolids() {
     solids = [...trees, ...rocks, ...lakes.flatMap((l) => l.circles.map((c) => ({ x: c.x, y: c.y, r: c.r + 2 }))),
               { x: FLAG.x, y: FLAG.y, r: 4 },    // the flag pole
               { x: BENCH.x - 8, y: BENCH.y, r: 7 }, { x: BENCH.x + 8, y: BENCH.y, r: 7 }];   // the bench
-    paintObstacleLayer();
   }
 
   const inWater = (lake, x, y, pad = 0) => lake.circles.some((c) => Math.hypot(x - c.x, y - c.y) < c.r + pad);
@@ -1670,6 +1686,7 @@
   }
 
   function queueWolves(n, night, firstDelay = 0) {
+    if (state.relax) return;                     // relax mode: no wolves
     let t = firstDelay;
     for (let i = 0; i < n; i++) {
       state.spawnQ.push({ t, night });
@@ -1678,12 +1695,14 @@
   }
 
   function scheduleDayWolves() {
+    if (state.relax) { state.dayWolfAt = null; return; }
     const chance = state.day < 2 ? 0 : Math.min(0.9, 0.35 + 0.1 * (state.day - 2));
     const se = season();
     state.dayWolfAt = Math.random() < chance ? rand(se.morning[1] + 0.5, se.evening[0] - 1.5) : null;
   }
 
   function spawnWolf(night) {
+    if (state.relax) return;
     let best = { x: FW + 40, y: FH / 2 }, bd = -1;
     for (let i = 0; i < 12; i++) {
       const side = Math.floor(Math.random() * 4);
@@ -1712,7 +1731,7 @@
   // ---------------------------------------------------------------------------
   function startGame() {
     Object.assign(state, {
-      screen: 'play', paused: false, day: 1, hour: CLOCK.start, best: 2,
+      screen: 'play', paused: false, day: 1, hour: CLOCK.start, best: 2, gameId: Date.now(),
       lost: 0, starved: 0, born: 0, floats: [], marker: null, spawnQ: [], fast: false,
       sheepTalkCD: 0, wolfTalkCD: 0,
       overDelay: 0, overReason: '', overT: 0,
@@ -1792,6 +1811,7 @@
     const parts = [tr('day', state.day)];
     if (newSeason) parts.push(tr('seasonMsg')[seasonIndex()]);
     if (isWinter()) { pickSnow(); parts.push(tr('snow')[state.snowLevel]); }
+    setTimeout(saveGame, 0);   // a new day: keep the game
     if (births) parts.push(tr('lambs', births));
     else parts.push(tr('noLambs'));
     if (starvedNow) parts.push(tr('starved', starvedNow));
@@ -1874,7 +1894,8 @@
       const expectedLambs = Math.min(fedCount('m'), fedCount('f'));
       oldPatches = patches;
       patches = generatePatches(sheep.length + expectedLambs, false, seasonIndex(state.day + 1));
-      showMsg(out ? tr('nightOut', n, out) : tr('nightSafe', n), 4);
+      if (state.relax) showMsg(out ? tr('nightOutRelax', out) : tr('nightSafeRelax'), 4);
+      else showMsg(out ? tr('nightOut', n, out) : tr('nightSafe', n), 4);
     }
   }
 
@@ -2544,7 +2565,16 @@
   const farmer = { mode: 'aboard', x: 0, y: 0, r: 9, vx: 0, vy: 0, ang: Math.PI / 2, path: [], walkPh: 0,
                    moving: false, petT: 0, petCD: 0, idleT: 0, hopCD: 0, didWork: false, workPh: 0, sipT: 0, sips: 0 };
   // where he digs today (dirt hole in front of the stable; in winter he shovels snow on the patio)
-  const dig = { x: 0, y: 0, prog: 0, winter: false, on: false };
+  const dig = { x: 0, y: 0, prog: 0, winter: false, on: false, lanes: [], lane: 0 };
+  // winter: the patio is shovelled in three strips, back and forth; the snow is pushed to the ends
+  const LANE_H = 24;
+  function makeLanes() {
+    const xl = P.x + 9, xr = P.x + P.w - 9;
+    return [0, 1, 2].map((i) => {
+      const dir = i % 2 ? -1 : 1;
+      return { y: P.y + 12 + i * 22, dir, x0: dir > 0 ? xl : xr, x1: dir > 0 ? xr : xl, reach: null };
+    });
+  }
   const DOOR_IN = { x: S.cx, y: S.bottom - 32 }, DOOR_OUT = { x: S.cx, y: S.bottom + 20 };
   const BELOW_BENCH = { x: BENCH.x, y: BENCH.y + 34 };
   // how far through his day the farmer is (0 = tractor arrived, 1 = time to leave)
@@ -2593,7 +2623,7 @@
     // His day: in the stable -> some work outside -> (not in winter) a beer on the bench -> back to the tractor.
     // In winter he only pops out briefly to shovel snow, then goes back in where it's warm.
     const winter = isWinter(), f = farmerDay();
-    const W = winter ? [0.35, 0.6] : [0.3, 0.6];          // work starts / ends (share of his day)
+    const W = winter ? [0.1, 1] : [0.3, 0.6];              // work starts / ends (share of his day)
     if (!F.path.length) {
       if (F.mode === 'off') { F.mode = 'inside'; F.idleT = rand(2, 5); }
       else if (F.mode === 'return') { F.mode = 'aboard'; say({ x: GATE.cx, y: tractor.y }, tr('bye'), 'farmer'); return; }
@@ -2604,12 +2634,18 @@
         F.mode = 'bench'; F.sipT = 2.5;
       } else if (F.mode === 'inside') {
         if (!F.didWork && f >= W[0]) {
-          // out to work: a spot in front of the stable (snow on the patio in winter)
-          const spot = winter ? { x: S.cx + 30 + rand(-6, 6), y: S.bottom + 34 } : { x: S.cx - 30 + rand(-18, 18), y: P.y + P.h + 30 + rand(-4, 8) };
-          Object.assign(dig, { x: spot.x, y: spot.y, prog: 0, winter, on: true });
-          F.path = [DOOR_IN, DOOR_OUT, { x: spot.x - 13, y: spot.y }];
+          // out to work: digging in front of the stable, or (winter) shovelling the patio clear
+          if (winter) {
+            Object.assign(dig, { winter: true, on: true, lanes: makeLanes(), lane: 0, prog: 0 });
+            const L = dig.lanes[0];
+            F.path = [DOOR_IN, DOOR_OUT, { x: L.x0 - L.dir * 8, y: L.y }];
+            say(F, tr('brr'), 'farmer');
+          } else {
+            const spot = { x: S.cx - 30 + rand(-18, 18), y: P.y + P.h + 30 + rand(-4, 8) };
+            Object.assign(dig, { x: spot.x, y: spot.y, prog: 0, winter: false, on: true });
+            F.path = [DOOR_IN, DOOR_OUT, { x: spot.x - 13, y: spot.y }];
+          }
           F.mode = 'toWork';
-          if (winter) say(F, tr('brr'), 'farmer');
         } else {
           F.idleT -= dt;
           if (F.idleT <= 0) {
@@ -2617,6 +2653,31 @@
             F.idleT = rand(3, 8);
           }
         }
+      } else if (F.mode === 'work' && dig.winter) {
+        // push the snow along the strip, then step over to the next one
+        F.workPh += dt;
+        const L = dig.lanes[dig.lane];
+        if (L.reach === null) L.reach = L.x0;
+        const tx = L.x1 - L.dir * 6;                                          // where he stops
+        if (Math.abs(F.y - L.y) > 1.5) {                                      // stepping over
+          F.ang = Math.atan2(L.y - F.y, 0.001);
+          F.y += Math.sign(L.y - F.y) * Math.min(Math.abs(L.y - F.y), C.speed * 0.6 * dt);
+          F.moving = true; F.walkPh += dt * 6;
+        } else if ((tx - F.x) * L.dir > 0) {
+          F.ang = L.dir > 0 ? 0 : Math.PI;
+          F.x += L.dir * C.shovelSpeed * dt;
+          F.moving = true; F.walkPh += dt * 5;
+          L.reach = clamp(F.x + L.dir * 13, Math.min(L.x0, L.x1), Math.max(L.x0, L.x1));
+        } else {
+          L.reach = L.x1;
+          dig.lane++;
+          if (dig.lane >= dig.lanes.length) {
+            F.didWork = true;
+            say(F, tr('done'), 'farmer');
+            F.path = [DOOR_OUT, DOOR_IN]; F.mode = 'off';                     // back into the warm stable
+          }                                                                   // (next strip: turn round, step over)
+        }
+        dig.prog = (dig.lane + (L.reach === null ? 0 : Math.abs(L.reach - L.x0) / Math.abs(L.x1 - L.x0))) / dig.lanes.length;
       } else if (F.mode === 'work') {
         F.ang = Math.atan2(dig.y - F.y, dig.x - F.x);
         F.workPh += dt;
@@ -2624,8 +2685,7 @@
         if (f >= W[1] && F.workPh > 6) {                                    // works at least a few seconds
           F.didWork = true;
           say(F, tr('done'), 'farmer');
-          if (winter) { F.path = [DOOR_OUT, DOOR_IN]; F.mode = 'off'; }           // back into the warm stable
-          else { F.path = [{ x: BENCH.x, y: BELOW_BENCH.y + 6 }, BENCH_SEAT]; F.mode = 'toBench'; }
+          F.path = [{ x: BENCH.x, y: BELOW_BENCH.y + 6 }, BENCH_SEAT]; F.mode = 'toBench';
         }
       } else if (F.mode === 'bench') {
         F.ang = Math.PI / 2;                                                  // looking out over the pasture
@@ -2641,7 +2701,7 @@
     F.vx = F.vy = 0;
     if (F.path.length) {
       const t = F.path[0], d = Math.hypot(t.x - F.x, t.y - F.y);
-      const sp = C.speed * (F.mode === 'inside' ? 0.6 : 1);
+      const sp = C.speed * (F.mode === 'inside' ? 0.6 : 1) * (isWinter() ? 1.25 : 1);   // hurries in the cold
       if (d < 3) F.path.shift();
       else {
         F.vx = ((t.x - F.x) / d) * sp; F.vy = ((t.y - F.y) / d) * sp;
@@ -2670,7 +2730,7 @@
       T.gate = Math.min(1, T.gate + dt / 1.3);
       if (T.gate >= 1) {
         T.mode = 'in'; T.y = -TR.L / 2 - 6;
-        showMsg(tr('tractor'), 5.5);
+        showMsg(tr(state.relax ? 'tractorRelax' : 'tractor'), 5.5);
         say({ x: GATE.cx, y: 16 }, tr('honk'), 'tractor'); T.honkCD = 2;
         if (!inStable(dog) && dog.woofCD <= 0) { say(dog, tr('woof2'), 'dog'); dog.woofCD = 2; }
       }
@@ -2758,7 +2818,10 @@
 
     if (state.overDelay > 0) {
       state.overDelay -= dt;
-      if (state.overDelay <= 0) { state.screen = 'over'; state.overT = 0; }
+      if (state.overDelay <= 0) {
+        state.screen = 'over'; state.overT = 0;
+        if (savedInfo && savedInfo.gameId === state.gameId) deleteSave();   // this game is over
+      }
     }
   }
 
@@ -2846,7 +2909,7 @@
 
   // Cobblestone patio (one picture per season; grass grows between the stones, snow in winter)
   const patioTex = [];
-  function makePatio(si) {
+  function makePatio(si, cleared = false) {
     const c = document.createElement('canvas');
     const k = 2;                                     // painted at double resolution
     c.width = (P.w + 8) * k; c.height = (P.h + 8) * k;
@@ -2865,13 +2928,13 @@
       }
     };
     // sand bed between the stones
-    g.fillStyle = ['#b3a582', '#b5a680', '#b09a6c', '#dfe6ee'][si];
+    g.fillStyle = cleared ? '#9c988c' : ['#b3a582', '#b5a680', '#b09a6c', '#dfe6ee'][si];
     g.beginPath(); g.roundRect(0, 0, P.w, P.h, 3); g.fill();
     // a few spots where the grass has taken over
     const clumps = [[0.2, 0.55, 11], [0.72, 0.35, 9], [0.5, 0.85, 8], [0.9, 0.8, 10], [0.08, 0.15, 7]]
       .map(([fx, fy, r]) => [fx * P.w, fy * P.h, r]);
     const grassy = (x, y) => clumps.some(([cx, cy, r]) => Math.hypot(x - cx, y - cy) < r);
-    const green = ['#86bb57', '#85b053', '#a6a356', '#eef3f8'][si];
+    const green = cleared ? '#8d977c' : ['#86bb57', '#85b053', '#a6a356', '#eef3f8'][si];
     for (const [cx, cy, r] of clumps) {
       g.fillStyle = green;
       g.beginPath(); g.ellipse(cx, cy, r * 1.15, r * 0.95, 0.3, 0, TAU); g.fill();
@@ -2927,7 +2990,14 @@
     // grass in the gaps and a few blades in the joints
     for (const [x, y] of gaps) tuft(x, y, winter ? 2 : 5, 4);
     for (let i = 0; i < 70; i++) tuft(rnd() * P.w, rnd() * P.h, 2, 2.6);
-    if (winter) {
+    if (cleared) {
+      // shovelled: wet stones, a little frost left in the joints
+      g.fillStyle = 'rgba(40,50,70,0.10)'; g.fillRect(0, 0, P.w, P.h);
+      for (let i = 0; i < 140; i++) {
+        g.fillStyle = `rgba(245,250,255,${0.35 + rnd() * 0.4})`;
+        g.beginPath(); g.ellipse(rnd() * P.w, rnd() * P.h, 0.8 + rnd() * 1.8, 0.5 + rnd() * 0.8, 0, 0, TAU); g.fill();
+      }
+    } else if (winter) {
       // snow: drifts at the edges and in the gaps, a dusting on the stones
       for (let i = 0; i < 60; i++) {
         const x = rnd() * P.w, y = rnd() * P.h;
@@ -3115,7 +3185,21 @@
       ctx.beginPath(); ctx.moveTo(0, Math.sign(y) * 7); ctx.lineTo(x, y); ctx.stroke();
       ctx.fillStyle = '#f0c9a0'; ctx.beginPath(); ctx.arc(x, y, 2, 0, TAU); ctx.fill();
     };
-    if (working && !petting) {
+    if (working && !petting && dig.winter) {
+      // pushing snow: shovel held low in front, a growing lump of snow on the blade
+      const bx = 13;
+      ctx.strokeStyle = '#8a5a2b'; ctx.lineWidth = 1.8; ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.moveTo(-1, 3); ctx.lineTo(bx, 0); ctx.stroke();
+      ctx.fillStyle = '#9aa2a8';
+      ctx.beginPath(); ctx.roundRect(bx, -5, 3, 10, 1.2); ctx.fill();
+      if (F.moving) {
+        const L = dig.lanes[Math.min(dig.lane, dig.lanes.length - 1)];
+        const f = L && L.reach !== null ? clamp(Math.abs(L.reach - L.x0) / Math.abs(L.x1 - L.x0), 0, 1) : 0;
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath(); ctx.ellipse(bx + 4 + f * 2, 0, 2 + f * 3, 4 + f * 3, 0, 0, TAU); ctx.fill();
+      }
+      hand(4, 5); hand(8, -2);
+    } else if (working && !petting) {
       // digging: the shovel goes into the ground, comes up, throws the earth to the side
       const c = (F.workPh % 1.4) / 1.4, push = Math.sin(c * TAU);
       const bx = 12 + push * 3, by = (c > 0.55 && c < 0.85 ? 6 : 0) + (dig.winter ? -1 : 0);
@@ -3181,17 +3265,7 @@
   function drawDigSite() {
     if (!dig.on || dig.prog <= 0.01 || state.screen === 'title') return;
     const { x, y, prog } = dig;
-    if (dig.winter) {
-      ctx.fillStyle = 'rgba(150,160,170,0.75)';                              // cleared stones
-      ctx.beginPath(); ctx.ellipse(x - 4, y, 6 + 12 * prog, 4 + 6 * prog, 0, 0, TAU); ctx.fill();
-      ctx.fillStyle = 'rgba(120,128,138,0.6)';
-      for (let i = 0; i < 6 * prog; i++) { ctx.beginPath(); ctx.ellipse(x - 12 + i * 4, y + ((i * 7) % 5) - 2, 1.8, 1.2, 0, 0, TAU); ctx.fill(); }
-      ctx.fillStyle = 'rgba(0,0,0,0.12)';                                    // snow heap and its shadow
-      ctx.beginPath(); ctx.ellipse(x + 16, y + 9, 5 + 6 * prog, 3 + 4 * prog, 0, 0, TAU); ctx.fill();
-      ctx.fillStyle = '#fbfdff';
-      ctx.beginPath(); ctx.ellipse(x + 15, y + 7, 4 + 6 * prog, 3 + 4 * prog, 0, 0, TAU); ctx.fill();
-      return;
-    }
+    if (dig.winter) return;                                                  // (drawn with the patio)
     ctx.fillStyle = '#4a3420';                                               // the hole
     ctx.beginPath(); ctx.ellipse(x, y, 3 + 4 * prog, 2.5 + 3 * prog, 0, 0, TAU); ctx.fill();
     ctx.fillStyle = '#2e2014';
@@ -3214,6 +3288,32 @@
     const si = seasonIndex();
     if (!patioTex[si]) patioTex[si] = makePatio(si);
     ctx.drawImage(patioTex[si], P.x - 4, P.y - 4, P.w + 8, P.h + 8);
+    // winter: the strips the farmer has shovelled today show the stones again
+    if (si === 3 && dig.on && dig.winter && state.screen !== 'title') {
+      if (!patioTex.cleared) patioTex.cleared = makePatio(3, true);
+      for (const L of dig.lanes) {
+        if (L.reach === null) continue;
+        const a = Math.min(L.x0, L.reach), b = Math.max(L.x0, L.reach);
+        if (b - a < 1) continue;
+        ctx.save();
+        ctx.beginPath(); ctx.roundRect(a, L.y - LANE_H / 2, b - a, LANE_H, 4); ctx.clip();
+        ctx.drawImage(patioTex.cleared, P.x - 4, P.y - 4, P.w + 8, P.h + 8);
+        ctx.restore();
+      }
+      // the snow pushed to the end of each strip
+      for (const L of dig.lanes) {
+        if (L.reach === null) continue;
+        const f = clamp(Math.abs(L.reach - L.x0) / Math.abs(L.x1 - L.x0), 0, 1);
+        if (f < 0.05) continue;
+        const hx = L.reach + L.dir * (4 + 3 * f), r = 3 + 6 * f;
+        ctx.fillStyle = 'rgba(60,80,110,0.18)';
+        ctx.beginPath(); ctx.ellipse(hx + 1.5, L.y + 2.5, r * 0.8, r * 1.15, 0, 0, TAU); ctx.fill();
+        ctx.fillStyle = '#f7fafd';
+        ctx.beginPath(); ctx.ellipse(hx, L.y, r * 0.8, r * 1.15, 0, 0, TAU); ctx.fill();
+        ctx.fillStyle = 'rgba(255,255,255,0.9)';
+        ctx.beginPath(); ctx.ellipse(hx - r * 0.2, L.y - r * 0.3, r * 0.4, r * 0.5, 0, 0, TAU); ctx.fill();
+      }
+    }
   }
 
   // Swiss flag (red square, white cross) waving on a pole
@@ -4205,7 +4305,7 @@
     const dark = darkness(hour);
 
     // the day, then the season symbol
-    ctx.font = '700 17px system-ui, sans-serif';
+    ctx.font = `27px ${TXT}`;                                  // same retro font as the start screen
     ctx.textBaseline = 'middle';
     ctx.textAlign = 'left';
     ctx.fillStyle = '#f1efe2';
@@ -4217,7 +4317,7 @@
     drawSkyIcon(142, cy, hour);
 
     const h = Math.floor(hour) % 24, mi = Math.floor((hour % 1) * 60);
-    ctx.font = '600 17px ui-monospace, Menlo, monospace';
+    ctx.font = `27px ${TXT}`;
     ctx.fillStyle = '#f1efe2';
     ctx.fillText(`${String(h).padStart(2, '0')}:${String(mi).padStart(2, '0')}`, 160, cy);
 
@@ -4244,7 +4344,7 @@
     ctx.textAlign = 'left';
     let x = CW - 76;
     const one = (text, color) => {                        // a single line
-      ctx.font = '600 14px system-ui, sans-serif';
+      ctx.font = `23px ${TXT}`;
       const w = ctx.measureText(text).width;
       ctx.fillStyle = color; ctx.fillText(text, x - w, cy);
       x -= w + 24;
@@ -4252,13 +4352,13 @@
     const two = (male) => {                               // sheep icon, count, and how many are fed below
       const n = countSex(male ? 'm' : 'f'), fed = fedCount(male ? 'm' : 'f');
       const main = `${male ? H.rams : H.ewes} ${n}`, sub = `${H.fed} ${fed}/${n}`;
-      ctx.font = '600 14px system-ui, sans-serif';
+      ctx.font = `23px ${TXT}`;
       const w1 = ctx.measureText(main).width;
-      ctx.font = '600 11px system-ui, sans-serif';
+      ctx.font = `18px ${TXT}`;
       const w = Math.max(w1, ctx.measureText(sub).width), left = x - w;
       ctx.fillStyle = n > 0 && fed === n ? '#9fe08a' : fed > 0 ? '#e8e04a' : '#8f9a8c';
       ctx.fillText(sub, left, cy + 9);
-      ctx.font = '600 14px system-ui, sans-serif';
+      ctx.font = `23px ${TXT}`;
       ctx.fillStyle = male ? '#c9ced4' : '#ffffff';
       ctx.fillText(main, left, cy - 7);
       drawHudSheep(left - 16, cy, male);
@@ -4266,7 +4366,7 @@
     };
     {                                                     // trophy + largest flock so far
       const text = `${state.best}`;
-      ctx.font = '600 14px system-ui, sans-serif';
+      ctx.font = `23px ${TXT}`;
       const w = ctx.measureText(text).width;
       ctx.fillStyle = '#ffd86b';
       ctx.fillText(text, x - w, cy);
@@ -4275,7 +4375,7 @@
     }
     {                                                     // stable symbol + how many are inside
       const text = `${safe}/${sheep.length}`;
-      ctx.font = '600 14px system-ui, sans-serif';
+      ctx.font = `23px ${TXT}`;
       const w = ctx.measureText(text).width;
       ctx.fillStyle = safe === sheep.length && sheep.length ? '#9fe08a' : '#f1efe2';
       ctx.fillText(text, x - w, cy);
@@ -4380,18 +4480,21 @@
   };
 
   function uiRects() {
-    const L = { x: 22, y: 106, w: 584, h: 476 };
-    const R = { x: 622, y: 106, w: 316, h: 476 };
+    const L = { x: 22, y: 94, w: 584, h: 476 };
+    const R = { x: 622, y: 94, w: 316, h: 476 };
     return {
       L, R,
       minus: { x: R.x + 22, y: R.y + 96, w: 56, h: 56 },
       plus: { x: R.x + R.w - 78, y: R.y + 96, w: 56, h: 56 },
-      start: { x: CW / 2 - 175, y: 600, w: 350, h: 54 },
+      start: { x: CW / 2 - 175, y: 586, w: 350, h: 54 },
+      resume: { x: CW / 2 - 216, y: 586, w: 210, h: 54 },
+      newGame: { x: CW / 2 + 6, y: 586, w: 210, h: 54 },
       cont: { x: CW / 2 - 140, y: 470, w: 280, h: 54 },
       help: { x: 8, y: CH - 26, w: helpLinkWidth(), h: 22 },
       langEn: { x: CW - 124, y: 14, w: 48, h: 32 },
       langDe: { x: CW - 66, y: 14, w: 48, h: 32 },
-      shuffle: { x: CW / 2 + 175 + 58, y: 606, w: 196, h: 42 },
+      shuffle: { x: CW / 2 + 175 + 58, y: 592, w: 196, h: 42 },
+      relax: { x: CW / 2 - 175 - 58 - 196, y: 592, w: 196, h: 42 },
       exit: { x: CW - 60, y: 9, w: 50, h: 26 },
       yes: { x: CW / 2 - 150, y: CH / 2 + 18, w: 130, h: 48 },
       no: { x: CW / 2 + 20, y: CH / 2 + 18, w: 130, h: 48 },
@@ -4502,6 +4605,19 @@
     return `rgb(${f(n >> 16)},${f((n >> 8) & 255)},${f(n & 255)})`;
   }
 
+  // The main button on the start screen slowly pulses: a soft glow around it and a little brighter
+  function drawPulsingButton(r, label, size, color) {
+    const k = 0.5 + 0.5 * Math.sin(state.t * 2.4);
+    for (let i = 3; i >= 1; i--) {
+      const g = i * (2 + 2.5 * k);
+      ctx.fillStyle = `rgba(255,226,122,${(0.10 + 0.16 * k) / i})`;
+      ctx.fillRect(r.x - g, r.y - g, r.w + 2 * g, r.h + 2 * g);
+    }
+    const n = parseInt(color.slice(1), 16), up = (c) => clamp(Math.round(c + 26 * k), 0, 255);
+    const hex = '#' + [n >> 16, (n >> 8) & 255, n & 255].map((c) => up(c).toString(16).padStart(2, '0')).join('');
+    drawButton(r, label, size, hex);
+  }
+
   function drawButton(r, label, size, color, enabled = true) {
     const hov = enabled && hit(r);
     const press = hov && pointerDown;
@@ -4574,11 +4690,11 @@
 
     // title
     const bob = Math.sin(state.t * 2) * 2;
-    pixelText('WEIDE', CW / 2, 44 + bob, 42, '#ffe27a');
+    pixelText('WEIDE', CW / 2, 33 + bob, 42, '#ffe27a');
     ctx.font = `26px ${TXT}`;
     ctx.fillStyle = '#cfe8b8';
     ctx.textAlign = 'center';
-    ctx.fillText(tr('subtitle'), CW / 2, 84);
+    ctx.fillText(tr('subtitle'), CW / 2, 72);
 
     // left: rules + keys
     const L = U.L;
@@ -4667,6 +4783,15 @@
     const [exA, exB] = tr('wolvesExample', ex);
     ctx.fillText(exA, R.x + R.w / 2, R.y + 292);
     ctx.fillText(exB, R.x + R.w / 2, R.y + 312);
+    if (state.relax) {                                           // relax mode: no wolves to set
+      ctx.fillStyle = 'rgba(16,32,22,0.88)';
+      ctx.fillRect(R.x + 8, R.y + 52, R.w - 16, 274);
+      pixelText(tr('relaxOn'), R.x + R.w / 2, R.y + 150, 16, '#7fe0c8');
+      ctx.font = `22px ${TXT}`; ctx.fillStyle = '#f5efdc'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      const [ra, rb] = tr('relaxLine');
+      ctx.fillText(ra, R.x + R.w / 2, R.y + 196);
+      ctx.fillText(rb, R.x + R.w / 2, R.y + 222);
+    }
 
     // start season (radio buttons)
     ctx.fillStyle = 'rgba(243,228,191,0.35)';
@@ -4686,15 +4811,32 @@
       ctx.fillText(tr('seasons')[i], cx + 16, cy2 + 1);
     });
 
-    // start
-    drawButton(U.start, tr('startGame'), 20, COL.red);
-    if (Math.floor(state.t * 2.5) % 2 === 0) {
-      pixelText('\u25B6', U.start.x - 26, U.start.y + U.start.h / 2 + 3, 18, '#ffe27a', 'center', false);
-      pixelText('\u25C0', U.start.x + U.start.w + 30, U.start.y + U.start.h / 2 + 3, 18, '#ffe27a', 'center', false);
-    }
+    // start (or, with a saved game: resume / new game)
     ctx.font = `19px ${TXT}`; ctx.fillStyle = '#c3d6bd'; ctx.textAlign = 'center';
-    ctx.fillText(tr('pressEnter'), CW / 2, U.start.y + U.start.h + 13);
+    if (savedInfo) {
+      drawPulsingButton(U.resume, tr('resume'), 13, COL.red);
+      drawButton(U.newGame, tr('newGame'), 13, '#b07a2a');
+      ctx.font = `19px ${TXT}`; ctx.fillStyle = '#c3d6bd'; ctx.textAlign = 'center';
+      ctx.fillText(tr('savedHint', savedInfo.day, savedInfo.n), CW / 2, 667);   // (stays put: a bit below the buttons)
+    } else {
+      drawPulsingButton(U.start, tr('startGame'), 20, COL.red);
+      ctx.font = `19px ${TXT}`; ctx.fillStyle = '#c3d6bd'; ctx.textAlign = 'center';
+      ctx.fillText(tr('pressEnter'), CW / 2, 667);   // (stays put: a bit below the buttons)
+    }
     drawButton(U.shuffle, tr('shuffle'), 10, COL.green);
+    // relax mode: a toggle with a pixel check box
+    drawButton(U.relax, '', 10, state.relax ? '#3f9c8a' : '#4d6a5a');
+    {
+      const r = U.relax, oy = hit(U.relax) && pointerDown ? 3 : 0;
+      const bx = r.x + 16, by = r.y + oy + r.h / 2 - 9;
+      ctx.fillStyle = COL.ink; ctx.fillRect(bx, by, 18, 18);
+      ctx.fillStyle = '#ece6d4'; ctx.fillRect(bx + 2, by + 2, 14, 14);
+      if (state.relax) {                                         // pixel check mark
+        ctx.fillStyle = COL.ink;
+        for (const [px, py] of [[4, 9], [6, 11], [8, 9], [10, 7], [12, 5]]) ctx.fillRect(bx + px - 1, by + py - 1, 3, 3);
+      }
+      pixelText(tr('relax'), r.x + r.w / 2 + 14, r.y + oy + r.h / 2 + 1, 10, COL.cream);
+    }
 
     // language: click a flag
     drawFlagButton(U.langEn, 'en');
@@ -4737,7 +4879,7 @@
       [K[2], state.born],
       [K[3], state.lost],
       [K[4], state.starved],
-      [K[5], `${state.wolfAdj > 0 ? '+' : ''}${state.wolfAdj}%`],
+      [K[5], state.relax ? tr('relaxShort') : `${state.wolfAdj > 0 ? '+' : ''}${state.wolfAdj}%`],
     ];
     ctx.font = `23px ${TXT}`;
     rows.forEach(([k, val], i) => {
@@ -4790,7 +4932,7 @@
   function updateCursor() {
     const U = uiRects();
     let c = PAW_CURSOR;
-    if (state.screen === 'title') c = [U.start, U.shuffle, U.minus, U.plus, U.help, U.langEn, U.langDe, ...U.seasons].some(hit) ? PAW_CURSOR_HOVER : PAW_CURSOR;
+    if (state.screen === 'title') c = [...(savedInfo ? [U.resume, U.newGame] : [U.start]), U.shuffle, U.relax, U.minus, U.plus, U.help, U.langEn, U.langDe, ...U.seasons].some(hit) ? PAW_CURSOR_HOVER : PAW_CURSOR;
     else if (state.screen === 'over') c = state.overT > 1 && hit(U.cont) ? PAW_CURSOR_HOVER : PAW_CURSOR;
     else if (state.confirmExit) c = hit(U.yes) || hit(U.no) ? PAW_CURSOR_HOVER : PAW_CURSOR;
     else if (state.paused || hit(U.exit)) c = PAW_CURSOR_HOVER;
@@ -4799,7 +4941,67 @@
 
   // Choosing the start season also shows it behind the menu
   // Back to the start screen: same map, fresh grass, no animals (so you can see the map)
+  // ---------------------------------------------------------------------------
+  // Saving: the running game is kept in the browser (on EXIT, when the page is closed or
+  // hidden, and every morning). The start screen then offers RESUME GAME.
+  // ---------------------------------------------------------------------------
+  const SAVE_KEY = 'weide.save';
+  const SAVE_STATE = ['day', 'hour', 'best', 'lost', 'starved', 'born', 'dayWolfAt', 'spawnQ', 'wolfAdj', 'relax',
+                      'seasonStart', 'snowLevel', 'tractorDays', 'tractorToday', 'gameId'];
+  let savedInfo = null;   // { day, n, gameId } of the saved game, for the start screen
+  function readSave() {
+    try {
+      const d = JSON.parse(localStorage.getItem(SAVE_KEY));
+      return d && d.v === 1 ? d : null;
+    } catch (e) { return null; }
+  }
+  function deleteSave() {
+    try { localStorage.removeItem(SAVE_KEY); } catch (e) { /* ignore */ }
+    savedInfo = null;
+  }
+  function saveGame() {
+    if (state.screen !== 'play' || !dog || state.overDelay > 0) return;
+    const st = {};
+    for (const k of SAVE_STATE) st[k] = state[k];
+    const data = {
+      v: 1, state: st, dog, sheep, wolves, bowlFood: bowl.food, tractor, farmer, dig,
+      map: { trees, rocks, lakes, streams, patches, oldPatches },
+    };
+    // pictures (canvases) are not saved; they are painted again when the game is loaded
+    const json = JSON.stringify(data, (k, v) => (k === 'tex' || k === 'texs' || k === 'lake' ? undefined : v));
+    try {
+      localStorage.setItem(SAVE_KEY, json);
+      savedInfo = { day: st.day, n: sheep.length, gameId: st.gameId };
+    } catch (e) { /* storage full or blocked: never mind */ }
+  }
+  function resumeGame() {
+    const d = readSave();
+    if (!d) { savedInfo = null; return; }
+    Object.assign(state, d.state, {
+      screen: 'play', paused: false, floats: [], marker: null, fast: false, msg: null,
+      sheepTalkCD: 0, wolfTalkCD: 0, overDelay: 0, overReason: '', overT: 0, confirmExit: false,
+    });
+    dog = d.dog; sheep = d.sheep; wolves = d.wolves; bowl.food = d.bowlFood;
+    trees = d.map.trees.map((t) => ({ ...t, texs: {} }));
+    rocks = d.map.rocks; lakes = d.map.lakes; streams = d.map.streams;
+    const withTex = (p) => ({ ...p, tex: makePatchTexture(p.R, p.winter) });
+    patches = d.map.patches.map(withTex);
+    oldPatches = d.map.oldPatches.map(withTex);
+    rebuildSolids();
+    Object.assign(tractor, d.tractor, { puffs: [] });
+    Object.assign(farmer, d.farmer);
+    Object.assign(dig, d.dig);
+    for (const e of [dog, ...sheep, ...wolves, farmer]) e.lpx = undefined;   // (footprints)
+    applySeason();
+    populateDucks();
+    showMsg(tr('welcomeBack', state.day), 4);
+  }
+  { const d = readSave(); if (d) savedInfo = { day: d.state.day, n: d.sheep.length, gameId: d.state.gameId }; }
+  window.addEventListener('pagehide', saveGame);
+  document.addEventListener('visibilitychange', () => { if (document.hidden) saveGame(); });
+
   function backToTitle() {
+    loadPrefs();
     state.screen = 'title';
     state.paused = false;
     state.confirmExit = false;
@@ -4835,9 +5037,22 @@
     }
   }
 
+  function setRelax(on) {
+    state.relax = on;
+    try { localStorage.setItem('weide.relax', on ? '1' : '0'); } catch (e) { /* ignore */ }
+  }
   function setWolfAdj(v) {
     state.wolfAdj = clamp(v, -50, 50);
     try { localStorage.setItem('weide.wolfAdj', String(state.wolfAdj)); } catch (e) { /* ignore */ }
+  }
+  function loadPrefs() {
+    try {
+      const saved = parseInt(localStorage.getItem('weide.wolfAdj'), 10);
+      state.wolfAdj = Number.isFinite(saved) ? clamp(Math.round(saved / 10) * 10, -50, 50) : 0;
+      const ss = parseInt(localStorage.getItem('weide.season'), 10);
+      state.seasonStart = ss >= 0 && ss < 4 ? ss : 0;
+      state.relax = localStorage.getItem('weide.relax') === '1';
+    } catch (e) { /* ignore */ }
   }
   try {
     const saved = parseInt(localStorage.getItem('weide.wolfAdj'), 10);
@@ -4846,6 +5061,7 @@
     state.lang = lg === 'de' || lg === 'en' ? lg : /^de\b/i.test(navigator.language || '') ? 'de' : 'en';
     const ss = parseInt(localStorage.getItem('weide.season'), 10);
     if (ss >= 0 && ss < 4) state.seasonStart = ss;
+    state.relax = localStorage.getItem('weide.relax') === '1';
   } catch (e) { /* ignore */ }
 
   // ---------------------------------------------------------------------------
@@ -4902,10 +5118,13 @@
     pointerDown = true;
     const U = uiRects();
     if (state.screen === 'title') {
-      if (hit(U.start)) startGame();
+      if (savedInfo && hit(U.resume)) resumeGame();
+      else if (savedInfo && hit(U.newGame)) startGame();
+      else if (!savedInfo && hit(U.start)) startGame();
       else if (hit(U.shuffle)) shuffleMap();
-      else if (hit(U.minus)) setWolfAdj(state.wolfAdj - 10);
-      else if (hit(U.plus)) setWolfAdj(state.wolfAdj + 10);
+      else if (hit(U.relax)) setRelax(!state.relax);
+      else if (hit(U.minus) && !state.relax) setWolfAdj(state.wolfAdj - 10);
+      else if (hit(U.plus) && !state.relax) setWolfAdj(state.wolfAdj + 10);
       else if (hit(U.help)) window.open('help.html', '_blank');
       else if (hit(U.langEn)) setLang('en');
       else if (hit(U.langDe)) setLang('de');
@@ -4914,7 +5133,7 @@
     }
     if (state.screen === 'over') { if (state.overT > 1 && hit(U.cont)) backToTitle(); return; }
     if (state.confirmExit) {
-      if (hit(U.yes)) backToTitle();
+      if (hit(U.yes)) { saveGame(); backToTitle(); }
       else if (hit(U.no)) state.confirmExit = false;
       return;
     }
@@ -4936,10 +5155,12 @@
 
   window.addEventListener('keydown', (e) => {
     if (state.screen === 'title') {
-      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); startGame(); }
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if (savedInfo) resumeGame(); else startGame(); }
+      else if (savedInfo && (e.key === 'n' || e.key === 'N')) startGame();
       else if (e.key === 'ArrowLeft' || e.key === '-') setWolfAdj(state.wolfAdj - 10);
       else if (e.key === 'ArrowRight' || e.key === '+' || e.key === '=') setWolfAdj(state.wolfAdj + 10);
       else if (e.key === 's' || e.key === 'S') shuffleMap();
+      else if (e.key === 'r' || e.key === 'R') setRelax(!state.relax);
       else if (e.key === 'l' || e.key === 'L') setLang(state.lang === 'de' ? 'en' : 'de');
       else if (e.key === 'ArrowUp') setSeasonStart((state.seasonStart + 3) % 4);
       else if (e.key === 'ArrowDown') setSeasonStart((state.seasonStart + 1) % 4);
@@ -4950,7 +5171,7 @@
       return;
     }
     if (state.confirmExit) {
-      if (e.key === 'Enter' || e.key === 'y' || e.key === 'Y') backToTitle();
+      if (e.key === 'Enter' || e.key === 'y' || e.key === 'Y') { saveGame(); backToTitle(); }
       else if (e.key === 'Escape' || e.key === 'n' || e.key === 'N') state.confirmExit = false;
       return;
     }
@@ -5005,7 +5226,7 @@
 
   // Handy for debugging in the browser console
   window.weide = {
-    flagWind, tractor, planTractor, farmer, dig,
+    flagWind, tractor, planTractor, farmer, dig, saveGame, resumeGame, get savedInfo() { return savedInfo; },
     state, SEASONS, CLOCK, CFG,
     get sheep() { return sheep; }, get wolves() { return wolves; },
     get dog() { return dog; }, get patches() { return patches; }, mouse, bowl,

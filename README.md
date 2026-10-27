@@ -32,7 +32,8 @@ or all ewes are gone.
 | Click / drag on the pasture, or arrow keys | Move the dog |
 | `P` or `Esc` | Pause |
 | `F` | Fast-forward the day |
-| `EXIT` button | Back to the start screen |
+| `R` (start screen) or `RELAX MODE` button | Relax mode: no wolves, just herding |
+| `EXIT` button | Save the game and go back to the start screen (then `RESUME GAME` / Enter, or `NEW GAME` / N) |
 
 On the start screen you can set the number of **wolves** (−50% to +50%), choose the
 **start season**, and **shuffle the map** until you like it. Click the little flags in the top

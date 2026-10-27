@@ -259,8 +259,9 @@
             <li>The gate is open, but the sheep can't leave the pasture.</li>
             <li><b>The farmer</b> gets off and walks over the patio into the stable. After a while he comes out and <b>digs</b> a hole
               in front of the stable, then sits on the <b>bench</b> next to the patio with a beer. About {{CFG.farmer.walkBack}} hour before
-              the tractor leaves he walks back and drives off. In <b>winter</b> it's too cold for that: he only pops out to shovel
-              some snow off the patio and then goes back inside (you'll see his boot prints in the snow). Sheep within {{CFG.farmer.sheepRadius}} px make way for him, and <b>wolves keep {{CFG.farmer.wolfFear}} px away</b>.
+              the tractor leaves he walks back and drives off. In <b>winter</b> it's too cold for that: he soon comes out and
+              <b>shovels the patio almost clear of snow</b>, strip by strip, pushing the snow to the sides, and then goes back
+              inside (you'll see his boot prints in the snow). By the next morning the patio is snowed over again. Sheep within {{CFG.farmer.sheepRadius}} px make way for him, and <b>wolves keep {{CFG.farmer.wolfFear}} px away</b>.
               When the dog comes within {{CFG.farmer.petRadius}} px, it wags its tail and gets a pat.</li>
           </ul></li>
       </ul>
@@ -276,7 +277,14 @@
         the usual order, 3 days each. Starting in winter is the hardest.</p>
       <p><b>Shuffle map</b>: the map behind the start screen (trees, rocks, lakes, grass) is the map you will play on.
         SHUFFLE MAP makes a new random one; it stays the same until you shuffle again.</p>
-      <p class="note">Your browser remembers the wolf and season settings.</p>
+      <p><b>Relax mode</b> (button left of START GAME, or the <b>R</b> key): no wolves at all, neither by day nor at night.
+        Just herding for fun. Everything else stays the same: the sheep still need grass, lambs are still born,
+        and sheep left outside at night still get cold.</p>
+      <p><b>Saving</b>: when you leave a game with <b>EXIT</b> (or close the browser tab), the game is saved in your browser.
+        The game is also saved every morning. The start screen then shows <b>RESUME GAME</b> (or press ENTER) next to <b>NEW GAME</b> (or press N).
+        A resumed game keeps its own map, wolf, relax and season settings; the options on the start screen are for new games.
+        There is one saved game: exiting a new game replaces it, and when a game is over its save is deleted.</p>
+      <p class="note">Your browser remembers the wolf, relax and season settings.</p>
     </div>
   </section>
 
@@ -366,6 +374,7 @@
         <tr><td><code>farmer.sheepRadius</code></td><td>{{CFG.farmer.sheepRadius}}</td><td>Sheep this close make way for the farmer</td></tr>
         <tr><td><code>farmer.wolfFear</code></td><td>{{CFG.farmer.wolfFear}}</td><td>Wolves keep this far away from the farmer</td></tr>
         <tr><td><code>farmer.petRadius</code></td><td>{{CFG.farmer.petRadius}}</td><td>The dog this close gets a pat</td></tr>
+        <tr><td><code>farmer.shovelSpeed</code></td><td>{{CFG.farmer.shovelSpeed}}</td><td>Winter: how fast he shovels the patio (px per second)</td></tr>
         <tr><td><code>farmer.walkBack</code></td><td>{{CFG.farmer.walkBack}}</td><td>Hours before the tractor leaves that he walks back to it</td></tr>
 
         <tr><th colspan="3">Seasons &amp; time: <code>CFG.summer</code>, <code>CFG.winter</code>, <code>SEASONS</code>, <code>CLOCK</code></th></tr>
