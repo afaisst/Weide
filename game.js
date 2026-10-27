@@ -33,60 +33,44 @@
   fit();
 
   // ---------------------------------------------------------------------------
-  // Tuning
+  // Tuning: all numbers live in config.js (shared with the help page)
   // ---------------------------------------------------------------------------
-  const CFG = {
-    dog:   {
-      r: 11, speed: 190,
-      staminaDrain: 6,       // % per second when running at full speed
-      staminaRecover: 6,     // % per second when standing still
-      tiredAt: 30, tiredSpeed: 0.7,          // below 30% stamina: 70% speed
-      exhaustedAt: 10, exhaustedSpeed: 0.45, // below 10% stamina: 45% speed
-    },
-    sheep: {
-      r: 10,
-      dogRadius: 130,        // sheep start to move away from the dog inside this distance
-      wolfRadius: 170,       // ... and panic when a wolf is this close
-      maxSpeed: 100,         // slower than the wolf (125)!
-      grazeSpeed: 22,        // walking speed when roaming on their own
-      grazePause: 0.3,       // chance to stand still for a while (off the grass)
-      eatRate: 5,            // food % per second while grazing
-      panicSpread: 1.8,      // radians: how randomly sheep scatter when a wolf is near
-      hungerMin: 10,         // health loss (%) over night if not fully fed
-      hungerMax: 30,
-      recoverMin: 5,         // health gain (%) over night if fully fed
-      recoverMax: 25,
-      grassAttract: 50,      // calm sheep this close to a grass patch walk onto it and stay
-      coldNight: 5,          // health % lost by a sheep that stays outside the whole night
-      homeRadius: 110,       // evening/night: sheep this close to the door walk in by themselves
-    },
-    wolf:  { r: 12, speed: 125, fleeSpeed: 165, fearRadius: 150, courage: 4, eatTime: 2.5,
-             attackRange: 100,  // a wolf this close to the dog may turn on it ...
-             attackChance: 0.3, // ... with this chance per second (night: x1.5)
-             dogBite: 15,       // stamina % the dog loses per bite
-             biteRate: 45 }, // health % per second a wolf takes from a sheep it touches
-    pack:  { randomness: 0.2, dayFraction: 0.5, stagger: [2, 4] },
-    bowl: { food: 100, rate: 3, reach: 16, wolfSmell: 120 }, // wolves close to the bowl eat from it too // dog food bowl: refills stamina 3x faster than resting
-    obstacles: { trees: [3, 5], rocks: [3, 6], lakes: [1, 3], wolfSeesHidden: 55 }, // wolves only spot sheep under a tree up close
-    fastForward: 4,          // speed multiplier while 'F' is on (daytime only)
-    grass: { surplus: 1.3, minPatches: 3, maxPatches: 6, winterFactor: 0.7 }, // winter: 30% less food
-    summer: { dogDrain: 1.15 },                   // hot: the dog tires 15% faster
-    winter: { dayDrain: 0.08, eveningDrain: 1.0, nightDrain: 1.5, // health % per second for sheep outside
-              gloom: 0.2 },  // winter days are never fully bright
-  };
+  const { CFG, SEASONS, CLOCK } = window.WEIDE;
 
-  // Seasons change every 3 days. All times are clock hours.
-  //   morning: [starts getting light, full daylight]
-  //   evening: [starts getting dark, fully dark]     night: nightfall, the wolves come
-  const SEASONS = [
-    { name: 'Spring', color: '#a8e07a', morning: [6, 8],  evening: [19, 21], night: 21 },
-    { name: 'Summer', color: '#ffd34d', morning: [5, 7],  evening: [21, 23], night: 22 },
-    { name: 'Fall',   color: '#f0a040', morning: [6, 8],  evening: [19, 21], night: 21 },
-    { name: 'Winter', color: '#bfe3ff', morning: [7, 10], evening: [15, 18], night: 18 },
-  ];
-  // The sheep come out at 5:30, the day ends at midnight.
-  // Real seconds per clock hour: day and night run at different speeds.
-  const CLOCK = { start: 5.5, end: 24, daySecPerHour: 5.5, nightSecPerHour: 7, seasonDays: 3 };
+  // Values changed on the help page ("detailed gameplay") are stored in the browser
+  // and applied on top of config.js. An open help page also sends changes live.
+  const CFG_ROOT = { CFG, SEASONS, CLOCK };
+  const CFG_DEFAULTS = JSON.parse(JSON.stringify(CFG_ROOT));
+  const CFG_KEY = 'weide.config';
+  let customSettings = 0;   // how many values differ from config.js
+  function cfgGet(root, path) {
+    return path.split('.').reduce((o, k) => (o == null ? undefined : o[k]), root);
+  }
+  function cfgSet(path, value) {
+    const def = cfgGet(CFG_DEFAULTS, path);
+    const ok = typeof def === 'number' ? Number.isFinite(value)
+      : Array.isArray(def) && Array.isArray(value) && value.length === def.length && value.every(Number.isFinite);
+    if (!ok) return false;
+    const keys = path.split('.'), last = keys.pop();
+    const obj = cfgGet(CFG_ROOT, keys.join('.'));
+    obj[last] = Array.isArray(value) ? value.slice() : value;
+    return true;
+  }
+  function cfgApply(overrides) {
+    // start from config.js, then apply the changes
+    for (const k of Object.keys(CFG_ROOT)) {
+      const fresh = JSON.parse(JSON.stringify(CFG_DEFAULTS[k]));
+      if (Array.isArray(fresh)) fresh.forEach((v, i) => Object.assign(CFG_ROOT[k][i], v));
+      else Object.assign(CFG_ROOT[k], fresh);
+    }
+    customSettings = 0;
+    for (const [path, v] of Object.entries(overrides || {})) if (cfgSet(path, v)) customSettings++;
+  }
+  try { cfgApply(JSON.parse(localStorage.getItem(CFG_KEY) || '{}')); } catch (e) { /* ignore */ }
+  window.addEventListener('message', (e) => {
+    const d = e.data;
+    if (d && d.type === 'weide-config' && d.overrides && typeof d.overrides === 'object') cfgApply(d.overrides);
+  });
 
   // ---------------------------------------------------------------------------
   // Helpers
@@ -177,6 +161,7 @@
     fast: false,       // fast-forward (daytime only)
     wolfAdj: 0,        // player's wolf setting: -50 .. +50 (%)
     seasonStart: 0,    // season of day 1 (0 spring, 1 summer, 2 fall, 3 winter)
+    snowLevel: 2,      // today's snowfall in winter: 0 none, 1 light, 2 moderate, 3 heavy
     sheepTalkCD: 0, wolfTalkCD: 0,
     confirmExit: false, // "really exit?" dialog is open
     overDelay: 0,
@@ -243,6 +228,7 @@
       hurtT: 0,         // > 0 while being bitten (red flash)
       headJit: 0, exitOff: rand(-20, 20), leaveT: 0, wasInside: false, trot: false,
       baaT: rand(4, 25),
+      winterSlow: rand(CFG.winter.sheepSlow[0], CFG.winter.sheepSlow[1]),
       puffs: Array.from({ length: 9 }, () => rand(0.85, 1.15)), // wool lumps
     };
   }
@@ -1012,6 +998,15 @@
     }
   }
 
+  // Each winter day gets random snowfall: none / light / moderate / heavy
+  function pickSnow() {
+    const ch = CFG.winter.snowChance;
+    let r = Math.random() * ch.reduce((a, b) => a + b, 0);
+    state.snowLevel = ch.length - 1;
+    for (let i = 0; i < ch.length; i++) { r -= ch[i]; if (r <= 0) { state.snowLevel = i; break; } }
+  }
+  const SNOW_MSG = ['A clear, frosty day', 'Light snow today', 'It is snowing', 'Heavy snowfall today!'];
+
   // Repaint everything that looks different in the new season
   function applySeason() {
     paintSeasonLayer();
@@ -1160,18 +1155,23 @@
     updateGroundLeaves(dt);
     updateBees(dt);
     const si = seasonIndex();
-    const want = si === 3 ? 110 : si === 2 ? 14 : 0;
+    // winter: today's snowfall, with slow lulls and flurries during the day
+    const flurry = 0.75 + 0.25 * Math.sin(state.t * 0.09) * Math.sin(state.t * 0.031 + 1);
+    const snow = CFG.winter.snowFlakes[state.snowLevel] || 0;
+    const want = si === 3 ? Math.round(snow * flurry) : si === 2 ? 14 : 0;
+    const heavy = state.snowLevel === 3;
+    const fresh = weather.length === 0;   // just started: fill the whole sky, not only the top
     while (weather.length < want) {
       weather.push({
-        x: rand(0, FW), y: rand(-FH, 0), vy: si === 3 ? rand(18, 40) : rand(20, 35),
-        vx: rand(-8, 8), r: si === 3 ? rand(1, 2.4) : rand(2.2, 3.4), ph: rand(0, TAU),
+        x: rand(0, FW), y: fresh ? rand(-20, FH) : rand(-40, 0), vy: si === 3 ? rand(18, 40) * (heavy ? 1.4 : 1) : rand(20, 35),
+        vx: rand(-8, 8) + (heavy ? 14 : 0), r: si === 3 ? rand(1.4, heavy ? 3.4 : 2.8) : rand(2.2, 3.4), ph: rand(0, TAU),
         col: ['#e3a32b', '#d9772b', '#c4512a', '#e8c547'][Math.floor(Math.random() * 4)],
       });
     }
     if (weather.length > want) weather.length = want;
     for (const f of weather) {
       f.ph += dt * 2;
-      f.x += (f.vx + Math.sin(f.ph) * 12 + (si === 2 ? Math.cos(wind.dir) * wind.gust * 30 : 0)) * dt;
+      f.x += (f.vx + Math.sin(f.ph) * 12 + Math.cos(wind.dir) * wind.gust * (si === 2 ? 30 : 20)) * dt;
       f.y += f.vy * dt;
       if (f.y > FH + 5) { f.y = -5; f.x = rand(0, FW); }
       if (f.x < -5) f.x = FW + 5; else if (f.x > FW + 5) f.x = -5;
@@ -1182,7 +1182,10 @@
     const winter = isWinter();
     for (const f of weather) {
       if (winter) {
-        ctx.fillStyle = 'rgba(255,255,255,0.85)';
+        // a soft shadow under each flake so it shows up against the white snow
+        ctx.fillStyle = 'rgba(70,90,120,0.28)';
+        ctx.beginPath(); ctx.arc(f.x + 1.2, f.y + 1.6, f.r, 0, TAU); ctx.fill();
+        ctx.fillStyle = 'rgba(255,255,255,0.95)';
         ctx.beginPath(); ctx.arc(f.x, f.y, f.r, 0, TAU); ctx.fill();
       } else {
         ctx.fillStyle = f.col;
@@ -1313,7 +1316,9 @@
     state.confirmExit = false;
     bowl.food = CFG.bowl.food;
     scheduleDayWolves();
-    showMsg(`Day 1, ${season().name} — herd your ram and ewe onto the grass so they can eat!`, 5);
+    if (isWinter()) pickSnow();
+    showMsg(`Day 1, ${season().name} — herd your ram and ewe onto the grass so they can eat!` +
+      (isWinter() ? ` — ${SNOW_MSG[state.snowLevel]}` : ''), 5);
   }
 
   // Called at midnight: hunger, births, then the next morning (5:30).
@@ -1363,6 +1368,7 @@
     ];
     const parts = [`Day ${state.day}`];
     if (newSeason) parts.push(SEASON_MSG[seasonIndex()]);
+    if (isWinter()) { pickSnow(); parts.push(SNOW_MSG[state.snowLevel]); }
     if (births) parts.push(`${plural(births, 'lamb', 'lambs')} born (${plural(births, 'fed pair', 'fed pairs')})!`);
     else parts.push('no lambs (needs a fed ram and a fed ewe)');
     if (starvedNow) parts.push(`${plural(starvedNow, 'sheep', 'sheep')} starved`);
@@ -1745,10 +1751,13 @@
     if (s.y < m) dy += (m - s.y) * 1.5;
     if (s.y > FH - m) dy -= (s.y - (FH - m)) * 1.5;
 
+    // winter: deep snow, cold legs - every sheep is 10-15% slower
+    const slow = isWinter() ? (s.winterSlow || 0.875) : 1;
+    dx *= slow; dy *= slow;
     const k = Math.min(1, (alarm > 0.05 ? 7 : 2) * dt);
     s.vx += (dx - s.vx) * k;
     s.vy += (dy - s.vy) * k;
-    const sp = Math.hypot(s.vx, s.vy), max = C.maxSpeed;
+    const sp = Math.hypot(s.vx, s.vy), max = C.maxSpeed * slow;
     if (sp > max) { s.vx *= max / sp; s.vy *= max / sp; }
     s.x += s.vx * dt;
     s.y += s.vy * dt;
@@ -2967,7 +2976,7 @@
       plus: { x: R.x + R.w - 78, y: R.y + 96, w: 56, h: 56 },
       start: { x: CW / 2 - 175, y: 600, w: 350, h: 54 },
       cont: { x: CW / 2 - 140, y: 470, w: 280, h: 54 },
-      help: { x: 8, y: CH - 26, w: 150, h: 22 },
+      help: { x: 8, y: CH - 26, w: customSettings ? 290 : 150, h: 22 },
       shuffle: { x: CW / 2 + 175 + 58, y: 606, w: 196, h: 42 },
       exit: { x: CW - 60, y: 9, w: 50, h: 26 },
       yes: { x: CW / 2 - 150, y: CH / 2 + 18, w: 130, h: 48 },
@@ -3231,6 +3240,11 @@
     if (hov) {
       const lw = ctx.measureText('detailed gameplay').width;
       ctx.fillRect(14, hy + 8, lw, 1);
+    }
+    if (customSettings) {   // reminder that tuning from the help page is active
+      const lw = ctx.measureText('detailed gameplay').width;
+      ctx.fillStyle = '#e8c45a';
+      ctx.fillText(`(${customSettings} custom setting${customSettings > 1 ? 's' : ''})`, 14 + lw + 10, hy);
     }
     ctx.textAlign = 'right';
     ctx.fillStyle = '#6f8569';
