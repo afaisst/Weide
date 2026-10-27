@@ -162,6 +162,7 @@
     wolfAdj: 0,        // player's wolf setting: -50 .. +50 (%)
     seasonStart: 0,    // season of day 1 (0 spring, 1 summer, 2 fall, 3 winter)
     snowLevel: 2,      // today's snowfall in winter: 0 none, 1 light, 2 moderate, 3 heavy
+    lang: 'en',        // 'en' or 'de'
     flurry: 1,         // how hard it is snowing right now (0.5 .. 1)
     sheepTalkCD: 0, wolfTalkCD: 0,
     confirmExit: false, // "really exit?" dialog is open
@@ -204,6 +205,125 @@
     if (h < se.evening[1]) return D * ease((h - se.evening[0]) / (se.evening[1] - se.evening[0]));
     return D;
   }
+
+  // ---------------------------------------------------------------------------
+  // Language: English / German (chosen with the flags on the start screen)
+  // ---------------------------------------------------------------------------
+  const pl = (n, one, many) => `${n} ${n === 1 ? one : many}`;
+  const I18N = {
+    en: {
+      seasons: ['Spring', 'Summer', 'Fall', 'Winter'],
+      subtitle: '~ sheep herding on a Swiss alp ~',
+      howTo: 'HOW TO PLAY', options: 'OPTIONS', move: 'MOVE', keys: 'KEYS', or: 'or',
+      clickDrag: 'click / drag on the pasture', pause: 'pause', fastDay: 'fast-forward the day',
+      wolves: 'WOLVES', startSeason: 'START SEASON', startGame: 'START GAME', shuffle: 'SHUFFLE MAP',
+      pressEnter: 'or press ENTER', help: 'detailed gameplay',
+      custom: (n) => `(${n} custom setting${n > 1 ? 's' : ''})`,
+      wolvesExample: (n) => [`6 sheep: about ${n} wolves at night,`, 'half as many by day.'],
+      difficulty: ['EASY', 'NORMAL', 'HARD', 'BRUTAL'],
+      rules: [
+        'Sheep run away from your Saint Bernard: use that to herd them.',
+        'Herd the sheep onto lush grass. They only eat when the dog keeps its distance.',
+        'The ring around a sheep shows what it ate today. Green = fully fed.',
+        'Hungry sheep lose health overnight and can starve.',
+        'Get every sheep into the stable before nightfall. Then the wolves come!',
+        'Wolves may attack by day too. Chase them off before they bite.',
+        'A fed ram (grey, horns) + a fed ewe (white) = a lamb overnight.',
+        'Running tires the dog. Its food bowl next to the stable restores energy.',
+        'Seasons change every 3 days. Summer days are long, winter days short and cold!',
+        'No rams or no ewes left = game over.',
+      ],
+      exit: 'EXIT', exitTitle: 'EXIT GAME?', exitLine1: 'Your flock will be lost.', exitLine2: 'Back to the main screen?',
+      yes: 'YES', no: 'NO', paused: 'PAUSED', pausedLine: 'Click or press P to continue',
+      gameOver: 'GAME OVER', cont: 'CONTINUE',
+      overRows: ['Day reached', 'Largest flock', 'Lambs born', 'Killed by wolves', 'Starved / froze', 'Wolves setting'],
+      nSheep: (n) => `${n} sheep`,
+      day: (n) => `Day ${n}`,
+      hud: { best: 'Best', inStable: 'In stable', fed: 'fed', ewes: 'Ewes', rams: 'Rams' },
+      allGone: 'All your sheep are gone.',
+      noRams: 'No rams left — your flock can no longer grow.',
+      noEwes: 'No ewes left — your flock can no longer grow.',
+      firstDay: (se) => `Day 1, ${se} — herd your ram and ewe onto the grass so they can eat!`,
+      snow: ['A clear, frosty day', 'Light snow today', 'It is snowing', 'Heavy snowfall today!'],
+      seasonMsg: [
+        'Spring is here! Flowers everywhere, and the ducks come back',
+        'Summer! Long days, but the heat tires the dog',
+        'Fall: the leaves turn yellow and the ducks fly south',
+        'Winter! Short, cold days. Keep the sheep warm in the stable',
+      ],
+      lambs: (n) => `${pl(n, 'lamb', 'lambs')} born (${pl(n, 'fed pair', 'fed pairs')})!`,
+      noLambs: 'no lambs (needs a fed ram and a fed ewe)',
+      starved: (n) => `${pl(n, 'sheep', 'sheep')} starved`,
+      dayWolves: (n) => (n > 1 ? `${n} wolves are coming! Chase them away!` : 'A wolf! Chase it away with your dog!'),
+      dusk: (winter) => (winter ? 'Evening already, and it is freezing! Bring the sheep in!' : 'Evening — bring the sheep into the stable!'),
+      nightOut: (n, out) => `Night falls — ${pl(n, 'wolf is', 'wolves are')} coming! ${out} sheep still outside!`,
+      nightSafe: (n) => `All sheep are safe. ${pl(n, 'wolf prowls', 'wolves prowl')} around… Good night!`,
+      fastOn: (x) => `Fast-forward ${x}× (press F again to stop)`, fastOff: 'Normal speed',
+      woof2: 'Woof woof!', woof: 'Woof!', yelp: 'Yelp!', energy: (n) => `-${n}% energy`,
+      baa: ['Bahh!', 'Bahh!', 'Bahh!', 'Bahh!', 'Mäh!'], baaPanic: 'BAHH!!', brr: 'Brrr!',
+      full: 'full!', froze: 'froze!', munch: 'munch!', givesUp: 'gives up!', bitten: 'bitten!',
+      ramKilled: 'Ram killed!', eweKilled: 'Ewe killed!', growl: 'Grrr!', howl: 'Awoooo!', quack: 'quack', quack2: 'quack!',
+    },
+    de: {
+      seasons: ['Frühling', 'Sommer', 'Herbst', 'Winter'],
+      subtitle: '~ Schafe hüten auf einer Schweizer Alp ~',
+      howTo: 'SO GEHT’S', options: 'OPTIONEN', move: 'LAUFEN', keys: 'TASTEN', or: 'oder',
+      clickDrag: 'klicken / ziehen auf der Weide', pause: 'Pause', fastDay: 'Tag vorspulen',
+      wolves: 'WÖLFE', startSeason: 'JAHRESZEIT', startGame: 'SPIEL STARTEN', shuffle: 'NEUE KARTE',
+      pressEnter: 'oder ENTER drücken', help: 'ausführliche Spielregeln',
+      custom: (n) => `(${n} eigene Einstellung${n > 1 ? 'en' : ''})`,
+      wolvesExample: (n) => [`6 Schafe: etwa ${n} Wölfe nachts,`, 'tagsüber halb so viele.'],
+      difficulty: ['LEICHT', 'NORMAL', 'SCHWER', 'BRUTAL'],
+      rules: [
+        'Die Schafe laufen vor deinem Bernhardiner weg: so treibst du sie.',
+        'Treib die Schafe aufs saftige Gras. Sie fressen nur, wenn der Hund Abstand hält.',
+        'Der Ring um ein Schaf zeigt, was es heute gefressen hat. Grün = satt.',
+        'Hungrige Schafe verlieren über Nacht Gesundheit und können verhungern.',
+        'Bring alle Schafe vor Einbruch der Nacht in den Stall. Dann kommen die Wölfe!',
+        'Wölfe greifen auch tagsüber an. Verjag sie, bevor sie zubeißen.',
+        'Ein satter Widder (grau, Hörner) + eine satte Aue (weiß) = ein Lamm über Nacht.',
+        'Rennen ermüdet den Hund. Sein Futternapf beim Stall gibt neue Kraft.',
+        'Alle 3 Tage wechselt die Jahreszeit. Sommertage sind lang, Wintertage kurz und kalt!',
+        'Keine Widder oder keine Auen mehr = Spiel vorbei.',
+      ],
+      exit: 'ENDE', exitTitle: 'SPIEL BEENDEN?', exitLine1: 'Deine Herde geht verloren.', exitLine2: 'Zurück zum Startbildschirm?',
+      yes: 'JA', no: 'NEIN', paused: 'PAUSE', pausedLine: 'Klicken oder P drücken zum Weiterspielen',
+      gameOver: 'SPIEL VORBEI', cont: 'WEITER',
+      overRows: ['Erreichter Tag', 'Größte Herde', 'Geborene Lämmer', 'Von Wölfen gerissen', 'Verhungert / erfroren', 'Wölfe-Einstellung'],
+      nSheep: (n) => `${n} ${n === 1 ? 'Schaf' : 'Schafe'}`,
+      day: (n) => `Tag ${n}`,
+      hud: { best: 'Rekord', inStable: 'Im Stall', fed: 'satt', ewes: 'Auen', rams: 'Widder' },
+      allGone: 'Alle deine Schafe sind weg.',
+      noRams: 'Keine Widder mehr — deine Herde kann nicht mehr wachsen.',
+      noEwes: 'Keine Auen mehr — deine Herde kann nicht mehr wachsen.',
+      firstDay: (se) => `Tag 1, ${se} — treib Widder und Aue aufs Gras, damit sie fressen können!`,
+      snow: ['Ein klarer, frostiger Tag', 'Heute leichter Schneefall', 'Es schneit', 'Heute starker Schneefall!'],
+      seasonMsg: [
+        'Der Frühling ist da! Überall Blumen, und die Enten kommen zurück',
+        'Sommer! Lange Tage, aber die Hitze macht den Hund müde',
+        'Herbst: Die Blätter werden gelb und die Enten fliegen in den Süden',
+        'Winter! Kurze, kalte Tage. Halte die Schafe im Stall warm',
+      ],
+      lambs: (n) => `${n === 1 ? '1 Lamm' : n + ' Lämmer'} geboren (${n === 1 ? '1 sattes Paar' : n + ' satte Paare'})!`,
+      noLambs: 'keine Lämmer (dazu braucht es einen satten Widder und eine satte Aue)',
+      starved: (n) => `${n === 1 ? '1 Schaf' : n + ' Schafe'} verhungert`,
+      dayWolves: (n) => (n > 1 ? `${n} Wölfe kommen! Verjag sie!` : 'Ein Wolf! Verjag ihn mit deinem Hund!'),
+      dusk: (winter) => (winter ? 'Schon Abend, und es ist eiskalt! Bring die Schafe rein!' : 'Abend — bring die Schafe in den Stall!'),
+      nightOut: (n, out) => `Die Nacht bricht herein — ${n === 1 ? 'ein Wolf kommt' : n + ' Wölfe kommen'}! ${out === 1 ? '1 Schaf ist' : out + ' Schafe sind'} noch draußen!`,
+      nightSafe: (n) => `Alle Schafe sind sicher. ${n === 1 ? 'Ein Wolf schleicht' : n + ' Wölfe schleichen'} herum… Gute Nacht!`,
+      fastOn: (x) => `Vorspulen ${x}× (F nochmal drücken zum Stoppen)`, fastOff: 'Normale Geschwindigkeit',
+      woof2: 'Wuff wuff!', woof: 'Wuff!', yelp: 'Jaul!', energy: (n) => `-${n}% Kraft`,
+      baa: ['Mäh!', 'Mäh!', 'Bääh!', 'Määh!', 'Mäh!'], baaPanic: 'MÄÄH!!', brr: 'Brrr!',
+      full: 'satt!', froze: 'erfroren!', munch: 'mampf!', givesUp: 'gibt auf!', bitten: 'gebissen!',
+      ramKilled: 'Widder gerissen!', eweKilled: 'Aue gerissen!', growl: 'Grrr!', howl: 'Auuuuu!', quack: 'quak', quack2: 'quak!',
+    },
+  };
+  // translated text: tr('key') or tr('key', args...) for texts with numbers in them
+  function tr(key, ...args) {
+    const v = (I18N[state.lang] || I18N.en)[key];
+    return typeof v === 'function' ? v(...args) : v;
+  }
+  const seasonName = (i = seasonIndex()) => tr('seasons')[i];
 
   // Animal sounds: floating text that rises and fades (like the ducks' quack)
   const SAY_COLOR = { dog: '#ffe0b0', sheep: '#ffffff', wolf: '#ffd23f' };
@@ -256,9 +376,9 @@
   function checkExtinction() {
     if (state.overDelay > 0 || state.screen !== 'play') return false;
     let reason = '';
-    if (sheep.length === 0) reason = 'All your sheep are gone.';
-    else if (countSex('m') === 0) reason = 'No rams left — your flock can no longer grow.';
-    else if (countSex('f') === 0) reason = 'No ewes left — your flock can no longer grow.';
+    if (sheep.length === 0) reason = tr('allGone');
+    else if (countSex('m') === 0) reason = tr('noRams');
+    else if (countSex('f') === 0) reason = tr('noEwes');
     if (!reason) return false;
     state.overReason = reason;
     state.overDelay = 2.5;
@@ -991,7 +1111,7 @@
         }
         d.tx = best.x; d.ty = best.y;
         d.dabbleT = 0;
-        if (Math.random() < 0.6) addFloat(d.x, d.y + 8, 'quack!', '#fff6c8');
+        if (Math.random() < 0.6) addFloat(d.x, d.y + 8, tr('quack2'), '#fff6c8');
       }
       d.scared = scared;
 
@@ -1002,7 +1122,7 @@
         d.nextT = rand(2, 6);
         if (Math.random() < 0.3 && d.kids.length === 0) d.dabbleT = rand(1.5, 3);   // head under water
         else { const q = randomWaterPoint(lake, 10); d.tx = q.x; d.ty = q.y; }
-        if (Math.random() < 0.08) addFloat(d.x, d.y + 8, 'quack', '#fff6c8');
+        if (Math.random() < 0.08) addFloat(d.x, d.y + 8, tr('quack'), '#fff6c8');
       }
       const want = d.dabbleT > 0 || dist2t < 3 ? 0 : scared ? 38 : 11;
       d.sp += (want - d.sp) * Math.min(1, 3 * dt);
@@ -1248,7 +1368,6 @@
     state.snowLevel = ch.length - 1;
     for (let i = 0; i < ch.length; i++) { r -= ch[i]; if (r <= 0) { state.snowLevel = i; break; } }
   }
-  const SNOW_MSG = ['A clear, frosty day', 'Light snow today', 'It is snowing', 'Heavy snowfall today!'];
 
   // Repaint everything that looks different in the new season
   function applySeason() {
@@ -1561,8 +1680,7 @@
     bowl.food = CFG.bowl.food;
     scheduleDayWolves();
     if (isWinter()) pickSnow();
-    showMsg(`Day 1, ${season().name} — herd your ram and ewe onto the grass so they can eat!` +
-      (isWinter() ? ` — ${SNOW_MSG[state.snowLevel]}` : ''), 5);
+    showMsg(tr('firstDay', seasonName()) + (isWinter() ? ` — ${tr('snow')[state.snowLevel]}` : ''), 5);
   }
 
   // Called at midnight: hunger, births, then the next morning (5:30).
@@ -1604,18 +1722,12 @@
     state.best = Math.max(state.best, sheep.length);
     scheduleDayWolves();
 
-    const SEASON_MSG = [
-      'Spring is here! Flowers everywhere, and the ducks come back',
-      'Summer! Long days, but the heat tires the dog',
-      'Fall: the leaves turn yellow and the ducks fly south',
-      'Winter! Short, cold days. Keep the sheep warm in the stable',
-    ];
-    const parts = [`Day ${state.day}`];
-    if (newSeason) parts.push(SEASON_MSG[seasonIndex()]);
-    if (isWinter()) { pickSnow(); parts.push(SNOW_MSG[state.snowLevel]); }
-    if (births) parts.push(`${plural(births, 'lamb', 'lambs')} born (${plural(births, 'fed pair', 'fed pairs')})!`);
-    else parts.push('no lambs (needs a fed ram and a fed ewe)');
-    if (starvedNow) parts.push(`${plural(starvedNow, 'sheep', 'sheep')} starved`);
+    const parts = [tr('day', state.day)];
+    if (newSeason) parts.push(tr('seasonMsg')[seasonIndex()]);
+    if (isWinter()) { pickSnow(); parts.push(tr('snow')[state.snowLevel]); }
+    if (births) parts.push(tr('lambs', births));
+    else parts.push(tr('noLambs'));
+    if (starvedNow) parts.push(tr('starved', starvedNow));
     showMsg(parts.join(' — '), newSeason ? 6.5 : 5);
 
     checkExtinction();
@@ -1637,7 +1749,7 @@
       state.dayWolfAt = null;
       const n = Math.max(1, Math.round(packSize(sheep.length) * CFG.pack.dayFraction));
       queueWolves(n, false);
-      showMsg(n > 1 ? `${n} wolves are coming! Chase them away!` : 'A wolf! Chase it away with your dog!');
+      showMsg(tr('dayWolves', n));
     }
 
     // Cold: sheep outside the stable lose health at night (~5% over a whole night).
@@ -1652,7 +1764,7 @@
         const W = CFG.winter;
         loss += (night ? W.nightDrain : prev === 'dusk' ? W.eveningDrain : W.dayDrain) * dt;
         if (prev !== 'day' && state.sheepTalkCD <= 0 && Math.random() < dt * 0.4) {
-          say(s, 'Brrr!', 'sheep');
+          say(s, tr('brr'), 'sheep');
           state.sheepTalkCD = 2;
         }
       }
@@ -1661,7 +1773,7 @@
       if (s.health <= 0) {
         sheep.splice(i, 1);
         state.starved++;
-        addFloat(s.x, s.y, 'froze!', '#bfe3ff');
+        addFloat(s.x, s.y, tr('froze'), '#bfe3ff');
         checkExtinction();
       }
     }
@@ -1681,7 +1793,7 @@
 
   function onPhaseStart(name) {
     if (name === 'dusk') {
-      showMsg(isWinter() ? 'Evening already, and it is freezing! Bring the sheep in!' : 'Evening — bring the sheep into the stable!', 4.5);
+      showMsg(tr('dusk', isWinter()), 4.5);
     } else if (name === 'night') {
       state.fast = false;
       const out = unsafeSheep().length;
@@ -1695,9 +1807,7 @@
       const expectedLambs = Math.min(fedCount('m'), fedCount('f'));
       oldPatches = patches;
       patches = generatePatches(sheep.length + expectedLambs, false, seasonIndex(state.day + 1));
-      showMsg(out
-        ? `Night falls — ${plural(n, 'wolf is', 'wolves are')} coming! ${out} sheep still outside!`
-        : `All sheep are safe. ${plural(n, 'wolf prowls', 'wolves prowl')} around… Good night!`, 4);
+      showMsg(out ? tr('nightOut', n, out) : tr('nightSafe', n), 4);
     }
   }
 
@@ -1767,8 +1877,8 @@
         const wx = w.x - dog.x, wy = w.y - dog.y, wd = Math.hypot(wx, wy);
         if (wd < 230 && (wx * dog.vx + wy * dog.vy) / (wd * dsp) > 0.7) { toward = true; break; }
       }
-      if (toward) { say(dog, 'Woof woof!', 'dog'); dog.woofCD = rand(3, 5); }
-      else if (dog.randWoofT <= 0) { say(dog, 'Woof!', 'dog'); dog.woofCD = 3; dog.randWoofT = rand(15, 35); }
+      if (toward) { say(dog, tr('woof2'), 'dog'); dog.woofCD = rand(3, 5); }
+      else if (dog.randWoofT <= 0) { say(dog, tr('woof'), 'dog'); dog.woofCD = 3; dog.randWoofT = rand(15, 35); }
     }
 
     if (dog.trick) {
@@ -1787,7 +1897,7 @@
       if (dog.idleT >= dog.boredAt) {
         const type = Math.random() < 0.5 ? 'chase' : 'roll';
         dog.trick = { type, t: 0, dur: type === 'chase' ? rand(2.2, 3.2) : rand(2.8, 3.8) };
-        if (type === 'chase' && Math.random() < 0.5) say(dog, 'Woof!', 'dog');
+        if (type === 'chase' && Math.random() < 0.5) say(dog, tr('woof'), 'dog');
         return;
       }
     }
@@ -1904,7 +2014,7 @@
       s.food += bite;
       p.amount -= bite;
       s.eating = true;
-      if (s.food >= 99.999) { s.food = 100; addFloat(s.x, s.y, 'full!', '#d6ffb0'); }
+      if (s.food >= 99.999) { s.food = 100; addFloat(s.x, s.y, tr('full'), '#d6ffb0'); }
     }
 
     // Evening / night: sheep close to the door want to go in by themselves
@@ -2017,9 +2127,9 @@
     s.baaT -= dt;
     if (state.sheepTalkCD <= 0) {
       if (panic > 0.4 && Math.random() < dt * 1.5) {
-        say(s, 'BAHH!!', 'sheep'); state.sheepTalkCD = 1.5;
+        say(s, tr('baaPanic'), 'sheep'); state.sheepTalkCD = 1.5;
       } else if (s.baaT <= 0) {
-        say(s, Math.random() < 0.8 ? 'Bahh!' : 'M\u00e4h!', 'sheep');
+        say(s, tr('baa')[Math.floor(Math.random() * 5)], 'sheep');
         state.sheepTalkCD = 2.5;
         s.baaT = rand(12, 35);
       }
@@ -2056,7 +2166,7 @@
       if (w.feeding) {
         const bite = Math.min(CFG.dog.staminaRecover * CFG.bowl.rate * dt, bowl.food);
         bowl.food -= bite;
-        if (!w.munched) { addFloat(w.x, w.y, 'munch!', '#ffe0a0'); w.munched = true; }
+        if (!w.munched) { addFloat(w.x, w.y, tr('munch'), '#ffe0a0'); w.munched = true; }
       } else w.munched = false;
 
       // Closest sheep that is not in the stable (and not hidden under a tree)
@@ -2103,7 +2213,7 @@
           w.courage -= dt * fearW;
           if (w.courage <= 0) {
             w.mode = 'leave';
-            addFloat(w.x, w.y, 'gives up!', '#fff3b0');
+            addFloat(w.x, w.y, tr('givesUp'), '#fff3b0');
           }
         }
       } else {
@@ -2124,9 +2234,9 @@
           dog.hurtT = 0.6;
           dog.trick = null;
           dog.x += ax * 6; dog.y += ay * 6;            // knocked back a bit
-          say(dog, 'Yelp!', 'dog');
+          say(dog, tr('yelp'), 'dog');
           dog.woofCD = Math.max(dog.woofCD, 1.6);
-          addFloat(dog.x, dog.y, `-${C.dogBite}% energy`, '#ffb3a8');
+          addFloat(dog.x, dog.y, tr('energy', C.dogBite), '#ffb3a8');
           w.attackT = 0;
           w.retreatT = 0.9;
           w.attackCD = rand(6, 12);
@@ -2134,14 +2244,14 @@
       } else if (w.attackCD <= 0 && dd < C.attackRange && w.eatT <= 0 && !w.feeding &&
                  Math.random() < C.attackChance * (w.night ? 1.5 : 1) * dt) {
         w.attackT = 1.4;
-        say(w, 'Grrr!', 'wolf');
+        say(w, tr('growl'), 'wolf');
       }
 
       // Howl now and then
       w.howlT -= dt;
       if (w.howlT <= 0) {
         if (state.wolfTalkCD <= 0 && w.attackT <= 0) {
-          say(w, 'Awoooo!', 'wolf');
+          say(w, tr('howl'), 'wolf');
           state.wolfTalkCD = 3;
         }
         w.howlT = w.night ? rand(10, 22) : rand(18, 35);
@@ -2170,14 +2280,14 @@
           const s = sheep[i];
           if (inStable(s)) continue;
           if (dist(s, w) < s.r + w.r + 2) {
-            if (s.hurtT <= 0) addFloat(s.x, s.y, 'bitten!', '#ffb3a8');
+            if (s.hurtT <= 0) addFloat(s.x, s.y, tr('bitten'), '#ffb3a8');
             s.health -= C.biteRate * dt;
             s.hurtT = 0.3;
             if (s.health <= 0) {
               sheep.splice(i, 1);
               w.eatT = C.eatTime;
               state.lost++;
-              addFloat(s.x, s.y, s.sex === 'm' ? 'Ram killed!' : 'Ewe killed!');
+              addFloat(s.x, s.y, s.sex === 'm' ? tr('ramKilled') : tr('eweKilled'));
               checkExtinction();
               break;
             }
@@ -3076,6 +3186,7 @@
   function drawHUD() {
     ctx.fillStyle = '#16241a';
     ctx.fillRect(0, 0, CW, HUD);
+    if (state.screen === 'title') return;   // the start screen has its own title there
     const cy = HUD / 2;
     const hour = state.screen === 'title' ? 12 : currentHour();
     const dark = darkness(hour);
@@ -3084,7 +3195,7 @@
     ctx.textBaseline = 'middle';
     ctx.textAlign = 'left';
     ctx.fillStyle = '#f1efe2';
-    ctx.fillText(`Day ${state.day}`, 16, cy);
+    ctx.fillText(tr('day', state.day), 16, cy);
 
     // sun / rising or setting sun / moon
     drawSkyIcon(100, cy, hour);
@@ -3115,18 +3226,19 @@
     ctx.font = '700 15px system-ui, sans-serif';
     ctx.textAlign = 'left';
     ctx.fillStyle = se.color;
-    ctx.fillText(se.name, bx + bw + 14, cy);
+    ctx.fillText(seasonName(), bx + bw + 14, cy);
 
 
     // flock info (right aligned, drawn as segments)
     const safe = sheep.length - unsafeSheep().length;
+    const H = tr('hud');
     const segs = [
-      { text: `Best ${state.best}`, color: '#f1efe2' },
-      { text: `In stable ${safe}/${sheep.length}`, color: '#f1efe2' },
-      { text: `fed ${fedCount('f')}/${countSex('f')}`, color: '#bfe6a6' },
-      { text: `Ewes ${countSex('f')}`, color: '#ffffff' },
-      { text: `fed ${fedCount('m')}/${countSex('m')}`, color: '#bfe6a6' },
-      { text: `Rams ${countSex('m')}`, color: '#c4c9cf' },
+      { text: `${H.best} ${state.best}`, color: '#f1efe2' },
+      { text: `${H.inStable} ${safe}/${sheep.length}`, color: '#f1efe2' },
+      { text: `${H.fed} ${fedCount('f')}/${countSex('f')}`, color: '#bfe6a6' },
+      { text: `${H.ewes} ${countSex('f')}`, color: '#ffffff' },
+      { text: `${H.fed} ${fedCount('m')}/${countSex('m')}`, color: '#bfe6a6' },
+      { text: `${H.rams} ${countSex('m')}`, color: '#c4c9cf' },
     ];
     ctx.font = '600 14px system-ui, sans-serif';
     ctx.textAlign = 'right';
@@ -3137,7 +3249,7 @@
       const gap = i === 2 || i === 4 ? 6 : 22;
       x -= ctx.measureText(sg.text).width + gap;
     });
-    if (state.screen === 'play') drawButton(uiRects().exit, 'EXIT', 8, COL.red);
+    if (state.screen === 'play') drawButton(uiRects().exit, tr('exit'), 8, COL.red);
   }
 
   function drawOverlay(lines, footer) {
@@ -3233,7 +3345,9 @@
       plus: { x: R.x + R.w - 78, y: R.y + 96, w: 56, h: 56 },
       start: { x: CW / 2 - 175, y: 600, w: 350, h: 54 },
       cont: { x: CW / 2 - 140, y: 470, w: 280, h: 54 },
-      help: { x: 8, y: CH - 26, w: customSettings ? 290 : 150, h: 22 },
+      help: { x: 8, y: CH - 26, w: helpLinkWidth(), h: 22 },
+      langEn: { x: CW - 124, y: 14, w: 48, h: 32 },
+      langDe: { x: CW - 66, y: 14, w: 48, h: 32 },
       shuffle: { x: CW / 2 + 175 + 58, y: 606, w: 196, h: 42 },
       exit: { x: CW - 60, y: 9, w: 50, h: 26 },
       yes: { x: CW / 2 - 150, y: CH / 2 + 18, w: 130, h: 48 },
@@ -3242,6 +3356,58 @@
     };
   }
   const hit = (r) => ui.x >= r.x && ui.x <= r.x + r.w && ui.y >= r.y && ui.y <= r.y + r.h;
+  function helpLinkWidth() {
+    ctx.save();
+    ctx.font = `18px ${TXT}`;
+    let w = ctx.measureText(tr('help')).width + 12;
+    if (customSettings) w += ctx.measureText(tr('custom', customSettings)).width + 10;
+    ctx.restore();
+    return w;
+  }
+
+  // Pixel flags (20 x 12 "pixels") for the language buttons
+  const FLAG_W = 20, FLAG_H = 12;
+  const FLAGS = (() => {
+    const uk = [], de = [];
+    const diag = Math.hypot(FLAG_W, FLAG_H);
+    for (let j = 0; j < FLAG_H; j++) for (let i = 0; i < FLAG_W; i++) {
+      const x = i + 0.5, y = j + 0.5;
+      // Union Jack: blue field, white+red diagonals, white-bordered red cross
+      const d1 = Math.abs(FLAG_H * x - FLAG_W * y) / diag, d2 = Math.abs(FLAG_H * x + FLAG_W * y - FLAG_W * FLAG_H) / diag;
+      const dx = Math.abs(x - FLAG_W / 2), dy = Math.abs(y - FLAG_H / 2);
+      let c = '#1d3f8f';
+      if (Math.min(d1, d2) < 1.9) c = '#f4f4f4';
+      if (Math.min(d1, d2) < 0.75) c = '#cf1b2b';
+      if (dx < 2.6 || dy < 2.2) c = '#f4f4f4';
+      if (dx < 1.5 || dy < 1.2) c = '#cf1b2b';
+      uk.push(c);
+      // Germany: black, red, gold
+      de.push(j < 4 ? '#151515' : j < 8 ? '#dd1f1f' : '#ffcc1a');
+    }
+    return { en: uk, de };
+  })();
+
+  function drawFlagButton(r, lang) {
+    const sel = state.lang === lang, hov = hit(r);
+    const px = 2, fw = FLAG_W * px, fh = FLAG_H * px;
+    const fx = Math.round(r.x + (r.w - fw) / 2), fy = Math.round(r.y + (r.h - fh) / 2) - 2;
+    ctx.fillStyle = COL.ink;                                     // chunky shadow
+    ctx.fillRect(fx + 3, fy + 3, fw + 4, fh + 4);
+    ctx.fillStyle = sel ? '#ffe27a' : hov ? COL.cream : '#6f7d6a'; // frame shows the selected language
+    ctx.fillRect(fx - 2, fy - 2, fw + 4, fh + 4);
+    ctx.globalAlpha = sel || hov ? 1 : 0.55;
+    FLAGS[lang].forEach((c, k) => {
+      ctx.fillStyle = c;
+      ctx.fillRect(fx + (k % FLAG_W) * px, fy + Math.floor(k / FLAG_W) * px, px, px);
+    });
+    ctx.globalAlpha = 1;
+    pixelText(lang.toUpperCase(), r.x + r.w / 2, fy + fh + 11, 8, sel ? '#ffe27a' : '#a9b9a2', 'center', false);
+  }
+
+  function setLang(l) {
+    state.lang = l === 'de' ? 'de' : 'en';
+    try { localStorage.setItem('weide.lang', state.lang); } catch (e) { /* ignore */ }
+  }
 
   function wrapText(text, maxW) {
     const words = text.split(' ');
@@ -3350,24 +3516,13 @@
   }
 
   function difficultyName(adj) {
-    if (adj <= -30) return ['EASY', COL.green];
-    if (adj <= 10) return ['NORMAL', COL.amber];
-    if (adj <= 30) return ['HARD', '#e8743a'];
-    return ['BRUTAL', '#e5533d'];
+    const D = tr('difficulty');
+    if (adj <= -30) return [D[0], COL.green];
+    if (adj <= 10) return [D[1], COL.amber];
+    if (adj <= 30) return [D[2], '#e8743a'];
+    return [D[3], '#e5533d'];
   }
 
-  const RULES = [
-    'Sheep run away from your Saint Bernard: use that to herd them.',
-    'Herd the sheep onto lush grass. They only eat when the dog keeps its distance.',
-    'The ring around a sheep shows what it ate today. Green = fully fed.',
-    'Hungry sheep lose health overnight and can starve.',
-    'Get every sheep into the stable before nightfall. Then the wolves come!',
-    'Wolves may attack by day too. Chase them off before they bite.',
-    'A fed ram (grey, horns) + a fed ewe (white) = a lamb overnight.',
-    'Running tires the dog. Its food bowl next to the stable restores energy.',
-    'Seasons change every 3 days. Summer days are long, winter days short and cold!',
-    'No rams or no ewes left = game over.',
-  ];
 
   function drawTitle() {
     ctx.setTransform(pxScale, 0, 0, pxScale, 0, 0);
@@ -3380,22 +3535,29 @@
     ctx.font = `26px ${TXT}`;
     ctx.fillStyle = '#cfe8b8';
     ctx.textAlign = 'center';
-    ctx.fillText('~ sheep herding on a Swiss alp ~', CW / 2, 84);
+    ctx.fillText(tr('subtitle'), CW / 2, 84);
 
     // left: rules + keys
     const L = U.L;
-    drawPixelBox(L, 'HOW TO PLAY', COL.red, 0.74);
-    ctx.font = `20px ${TXT}`;
+    drawPixelBox(L, tr('howTo'), COL.red, 0.74);
     ctx.textAlign = 'left';
     ctx.textBaseline = 'middle';
+    // pick the largest text size that still fits (German needs a bit more room)
+    const room = L.h - 60 - 96;
+    let fs = 20, wrapped;
+    for (fs = 20; fs >= 16; fs--) {
+      ctx.font = `${fs}px ${TXT}`;
+      wrapped = tr('rules').map((r) => wrapText(r, L.w - 62));
+      const h = wrapped.reduce((a, ls) => a + ls.length * (fs - 1) + 3, 0);
+      if (h <= room) break;
+    }
     let y = L.y + 60;
-    for (const rule of RULES) {
-      const lines = wrapText(rule, L.w - 62);
+    for (const lines of wrapped) {
       ctx.fillStyle = '#ffe27a';
       ctx.fillRect(L.x + 22, y - 4, 7, 7);                 // square bullet
       ctx.fillStyle = '#f5efdc';
-      lines.forEach((ln, i) => ctx.fillText(ln, L.x + 40, y + i * 19));
-      y += lines.length * 19 + 3;
+      lines.forEach((ln, i) => ctx.fillText(ln, L.x + 40, y + i * (fs - 1)));
+      y += lines.length * (fs - 1) + 3;
     }
     // controls
     y += 6;
@@ -3408,28 +3570,31 @@
       return ctx.measureText(t).width;
     };
     // row 1: move the dog
-    pixelText('MOVE', L.x + 22, y + 15, 11, COL.cream, 'left', false);
-    let x = L.x + 82;
+    // the key caps start after the longer of the two row labels
+    ctx.font = `11px ${PIX}`;
+    const kx0 = L.x + 22 + Math.max(ctx.measureText(tr('move')).width, ctx.measureText(tr('keys')).width) + 16;
+    pixelText(tr('move'), L.x + 22, y + 15, 11, COL.cream, 'left', false);
+    let x = kx0;
     for (const k of ['\u25C0', '\u25B2', '\u25BC', '\u25B6']) x += drawKey(x, y, k) + 4;
     x += 10;
-    x += label('or', x, y) + 12;
+    x += label(tr('or'), x, y) + 12;
     drawMouseCursor(x, y + 3);
     x += 24;
-    label('click / drag on the pasture', x, y);
+    label(tr('clickDrag'), x, y);
     // row 2: other keys
     y += 40;
-    pixelText('KEYS', L.x + 22, y + 15, 11, COL.cream, 'left', false);
-    x = L.x + 82;
+    pixelText(tr('keys'), L.x + 22, y + 15, 11, COL.cream, 'left', false);
+    x = kx0;
     x += drawKey(x, y, 'P') + 4;
     x += drawKey(x, y, 'ESC') + 10;
-    x += label('pause', x, y) + 28;
+    x += label(tr('pause'), x, y) + 28;
     x += drawKey(x, y, 'F') + 10;
-    label('fast-forward the day', x, y);
+    label(tr('fastDay'), x, y);
 
     // right: options
     const R = U.R;
-    drawPixelBox(R, 'OPTIONS', COL.blue, 0.74);
-    pixelText('WOLVES', R.x + R.w / 2, R.y + 70, 13, COL.cream);
+    drawPixelBox(R, tr('options'), COL.blue, 0.74);
+    pixelText(tr('wolves'), R.x + R.w / 2, R.y + 70, 13, COL.cream);
     drawButton(U.minus, '-', 22, COL.amber, state.wolfAdj > -50);
     drawButton(U.plus, '+', 22, COL.amber, state.wolfAdj < 50);
     const v = state.wolfAdj;
@@ -3456,13 +3621,14 @@
 
     ctx.font = `20px ${TXT}`; ctx.fillStyle = '#f5efdc'; ctx.textAlign = 'center';
     const ex = Math.max(1, Math.round(packBase(6)));
-    ctx.fillText(`6 sheep: about ${ex} wolves at night,`, R.x + R.w / 2, R.y + 292);
-    ctx.fillText('half as many by day.', R.x + R.w / 2, R.y + 312);
+    const [exA, exB] = tr('wolvesExample', ex);
+    ctx.fillText(exA, R.x + R.w / 2, R.y + 292);
+    ctx.fillText(exB, R.x + R.w / 2, R.y + 312);
 
     // start season (radio buttons)
     ctx.fillStyle = 'rgba(243,228,191,0.35)';
     ctx.fillRect(R.x + 20, R.y + 332, R.w - 40, 2);
-    pixelText('START SEASON', R.x + R.w / 2, R.y + 356, 12, COL.cream);
+    pixelText(tr('startSeason'), R.x + R.w / 2, R.y + 356, 12, COL.cream);
     SEASONS.forEach((se, i) => {
       const b = U.seasons[i];
       const sel = state.seasonStart === i, hov = hit(b);
@@ -3474,18 +3640,22 @@
       if (sel) { ctx.fillStyle = COL.ink; ctx.fillRect(cx - 4, cy2 - 4, 8, 8); }
       ctx.font = `22px ${TXT}`; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
       ctx.fillStyle = sel ? se.color : hov ? '#f5efdc' : '#b9c9b0';
-      ctx.fillText(se.name, cx + 16, cy2 + 1);
+      ctx.fillText(tr('seasons')[i], cx + 16, cy2 + 1);
     });
 
     // start
-    drawButton(U.start, 'START GAME', 20, COL.red);
+    drawButton(U.start, tr('startGame'), 20, COL.red);
     if (Math.floor(state.t * 2.5) % 2 === 0) {
       pixelText('\u25B6', U.start.x - 26, U.start.y + U.start.h / 2 + 3, 18, '#ffe27a', 'center', false);
       pixelText('\u25C0', U.start.x + U.start.w + 30, U.start.y + U.start.h / 2 + 3, 18, '#ffe27a', 'center', false);
     }
     ctx.font = `19px ${TXT}`; ctx.fillStyle = '#c3d6bd'; ctx.textAlign = 'center';
-    ctx.fillText('or press ENTER', CW / 2, U.start.y + U.start.h + 13);
-    drawButton(U.shuffle, 'SHUFFLE MAP', 10, COL.green);
+    ctx.fillText(tr('pressEnter'), CW / 2, U.start.y + U.start.h + 13);
+    drawButton(U.shuffle, tr('shuffle'), 10, COL.green);
+
+    // language: click a flag
+    drawFlagButton(U.langEn, 'en');
+    drawFlagButton(U.langDe, 'de');
 
     // small print in the corners
     const hy = CH - 14;
@@ -3493,15 +3663,15 @@
     ctx.textAlign = 'left';
     const hov = hit(U.help);
     ctx.fillStyle = hov ? '#d8ecc8' : '#7f957a';
-    ctx.fillText('detailed gameplay', 14, hy);
+    ctx.fillText(tr('help'), 14, hy);
     if (hov) {
-      const lw = ctx.measureText('detailed gameplay').width;
+      const lw = ctx.measureText(tr('help')).width;
       ctx.fillRect(14, hy + 8, lw, 1);
     }
     if (customSettings) {   // reminder that tuning from the help page is active
-      const lw = ctx.measureText('detailed gameplay').width;
+      const lw = ctx.measureText(tr('help')).width;
       ctx.fillStyle = '#e8c45a';
-      ctx.fillText(`(${customSettings} custom setting${customSettings > 1 ? 's' : ''})`, 14 + lw + 10, hy);
+      ctx.fillText(tr('custom', customSettings), 14 + lw + 10, hy);
     }
     ctx.textAlign = 'right';
     ctx.fillStyle = '#6f8569';
@@ -3513,17 +3683,18 @@
     dimScreen();
     const U = uiRects();
     const b = { x: CW / 2 - 290, y: 150, w: 580, h: 290 };
-    drawPixelBox(b, 'GAME OVER', COL.red);
+    drawPixelBox(b, tr('gameOver'), COL.red);
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.font = `25px ${TXT}`; ctx.fillStyle = '#ffd9a8';
     wrapText(state.overReason, b.w - 60).forEach((ln, i) => ctx.fillText(ln, CW / 2, b.y + 78 + i * 24));
+    const K = tr('overRows');
     const rows = [
-      ['Day reached', state.day],
-      ['Largest flock', `${state.best} sheep`],
-      ['Lambs born', state.born],
-      ['Killed by wolves', state.lost],
-      ['Starved / froze', state.starved],
-      ['Wolves setting', `${state.wolfAdj > 0 ? '+' : ''}${state.wolfAdj}%`],
+      [K[0], state.day],
+      [K[1], tr('nSheep', state.best)],
+      [K[2], state.born],
+      [K[3], state.lost],
+      [K[4], state.starved],
+      [K[5], `${state.wolfAdj > 0 ? '+' : ''}${state.wolfAdj}%`],
     ];
     ctx.font = `23px ${TXT}`;
     rows.forEach(([k, val], i) => {
@@ -3531,7 +3702,7 @@
       ctx.textAlign = 'left'; ctx.fillStyle = '#c9d8c0'; ctx.fillText(k, b.x + 130, yy);
       ctx.textAlign = 'right'; ctx.fillStyle = '#ffe27a'; ctx.fillText(String(val), b.x + b.w - 130, yy);
     });
-    if (state.overT > 1) drawButton(U.cont, 'CONTINUE', 16, COL.blue);
+    if (state.overT > 1) drawButton(U.cont, tr('cont'), 16, COL.blue);
   }
 
   function drawConfirmExit() {
@@ -3539,21 +3710,21 @@
     dimScreen();
     const U = uiRects();
     const b = { x: CW / 2 - 220, y: CH / 2 - 110, w: 440, h: 200 };
-    drawPixelBox(b, 'EXIT GAME?', COL.red);
+    drawPixelBox(b, tr('exitTitle'), COL.red);
     ctx.font = `24px ${TXT}`; ctx.fillStyle = '#f5efdc'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillText('Your flock will be lost.', CW / 2, b.y + 70);
-    ctx.fillText('Back to the main screen?', CW / 2, b.y + 94);
-    drawButton(U.yes, 'YES', 14, COL.red);
-    drawButton(U.no, 'NO', 14, COL.blue);
+    ctx.fillText(tr('exitLine1'), CW / 2, b.y + 70);
+    ctx.fillText(tr('exitLine2'), CW / 2, b.y + 94);
+    drawButton(U.yes, tr('yes'), 14, COL.red);
+    drawButton(U.no, tr('no'), 14, COL.blue);
   }
 
   function drawPaused() {
     ctx.setTransform(pxScale, 0, 0, pxScale, 0, 0);
     dimScreen();
     const b = { x: CW / 2 - 200, y: CH / 2 - 90, w: 400, h: 170 };
-    drawPixelBox(b, 'PAUSED', COL.blue);
+    drawPixelBox(b, tr('paused'), COL.blue);
     ctx.font = `24px ${TXT}`; ctx.fillStyle = '#f5efdc'; ctx.textAlign = 'center';
-    ctx.fillText('Click or press P to continue', CW / 2, b.y + 100);
+    ctx.fillText(tr('pausedLine'), CW / 2, b.y + 100);
   }
 
   // In-game cursor: a cream ring with a little paw print (hot spot in the middle)
@@ -3576,7 +3747,7 @@
   function updateCursor() {
     const U = uiRects();
     let c = PAW_CURSOR;
-    if (state.screen === 'title') c = [U.start, U.shuffle, U.minus, U.plus, U.help, ...U.seasons].some(hit) ? PAW_CURSOR_HOVER : PAW_CURSOR;
+    if (state.screen === 'title') c = [U.start, U.shuffle, U.minus, U.plus, U.help, U.langEn, U.langDe, ...U.seasons].some(hit) ? PAW_CURSOR_HOVER : PAW_CURSOR;
     else if (state.screen === 'over') c = state.overT > 1 && hit(U.cont) ? PAW_CURSOR_HOVER : PAW_CURSOR;
     else if (state.confirmExit) c = hit(U.yes) || hit(U.no) ? PAW_CURSOR_HOVER : PAW_CURSOR;
     else if (state.paused || hit(U.exit)) c = PAW_CURSOR_HOVER;
@@ -3628,6 +3799,8 @@
   try {
     const saved = parseInt(localStorage.getItem('weide.wolfAdj'), 10);
     if (Number.isFinite(saved)) state.wolfAdj = clamp(Math.round(saved / 10) * 10, -50, 50);
+    const lg = localStorage.getItem('weide.lang');
+    state.lang = lg === 'de' || lg === 'en' ? lg : /^de\b/i.test(navigator.language || '') ? 'de' : 'en';
     const ss = parseInt(localStorage.getItem('weide.season'), 10);
     if (ss >= 0 && ss < 4) state.seasonStart = ss;
   } catch (e) { /* ignore */ }
@@ -3691,6 +3864,8 @@
       else if (hit(U.minus)) setWolfAdj(state.wolfAdj - 10);
       else if (hit(U.plus)) setWolfAdj(state.wolfAdj + 10);
       else if (hit(U.help)) window.open('help.html', '_blank');
+      else if (hit(U.langEn)) setLang('en');
+      else if (hit(U.langDe)) setLang('de');
       else U.seasons.forEach((b, i) => { if (hit(b)) setSeasonStart(i); });
       return;
     }
@@ -3722,6 +3897,7 @@
       else if (e.key === 'ArrowLeft' || e.key === '-') setWolfAdj(state.wolfAdj - 10);
       else if (e.key === 'ArrowRight' || e.key === '+' || e.key === '=') setWolfAdj(state.wolfAdj + 10);
       else if (e.key === 's' || e.key === 'S') shuffleMap();
+      else if (e.key === 'l' || e.key === 'L') setLang(state.lang === 'de' ? 'en' : 'de');
       else if (e.key === 'ArrowUp') setSeasonStart((state.seasonStart + 3) % 4);
       else if (e.key === 'ArrowDown') setSeasonStart((state.seasonStart + 1) % 4);
       return;
@@ -3746,7 +3922,7 @@
       const ph = phaseName();
       if (ph === 'day' || ph === 'dusk') {
         state.fast = !state.fast;
-        showMsg(state.fast ? `Fast-forward ${CFG.fastForward}× (press F again to stop)` : 'Normal speed', 2);
+        showMsg(state.fast ? tr('fastOn', CFG.fastForward) : tr('fastOff'), 2);
       }
     }
   });

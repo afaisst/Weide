@@ -34,7 +34,8 @@ or all ewes are gone.
 | `EXIT` button | Back to the start screen |
 
 On the start screen you can set the number of **wolves** (−50% to +50%), choose the
-**start season**, and **shuffle the map** until you like it.
+**start season**, and **shuffle the map** until you like it. Click the little flags in the top
+right corner (or press `L`) to play in **English or German**.
 
 ## Running the game
 
