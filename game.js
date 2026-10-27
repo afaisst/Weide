@@ -99,8 +99,28 @@
     [S.d1, S.bottom, S.x + S.w, S.bottom],   // bottom-right
   ];
 
-  // Dog food bowl, outside next to the right stable wall
-  const bowl = { x: S.x + S.w + 22, y: S.cy + 25, r: 8, food: 100 };
+  // Dog food bowl, outside the right stable wall, near the front corner
+  const bowl = { x: S.x + S.w + 16, y: S.bottom - 6, r: 8, food: 100 };
+
+  // Gate in the top fence, right of the stable: the tractor comes in here and parks along the wall
+  const GATE = { x0: S.x + S.w + 6, x1: S.x + S.w + 58, cx: S.x + S.w + 31 };
+
+  // Cobblestone patio in front of the door: in the evening, sheep standing on it walk in by themselves
+  const P = { x: S.cx - 74, y: S.bottom + 4, w: 148, h: 68 };
+  const onPatio = (p) => p.x > P.x && p.x < P.x + P.w && p.y > P.y - 4 && p.y < P.y + P.h;
+
+  // Wooden bench against the front wall, right of the patio (the farmer has his beer there)
+  const BENCH = { x: S.x + S.w - 18, y: S.bottom + 10, w: 30 };   // centre of the seat
+  const BENCH_SEAT = { x: BENCH.x, y: BENCH.y + 3 };            // where the farmer sits
+
+  // Swiss flag on a pole, left of the patio
+  const FLAG = { x: S.x + 12, y: S.bottom + 30, h: 40, size: 20 };
+
+  // distance from a point outside the stable to its walls (0 inside)
+  function stableDist(p) {
+    const dx = Math.max(S.x - p.x, 0, p.x - (S.x + S.w)), dy = Math.max(S.y - p.y, 0, p.y - S.bottom);
+    return Math.hypot(dx, dy);
+  }
 
   const inStable = (p) =>
     p.x > S.x && p.x < S.x + S.w && p.y > S.y && p.y < S.bottom - 2;
@@ -223,12 +243,12 @@
       difficulty: ['EASY', 'NORMAL', 'HARD', 'BRUTAL'],
       rules: [
         'Sheep run away from your Saint Bernard: use that to herd them.',
-        'Herd the sheep onto lush grass. They only eat when the dog keeps its distance.',
+        'Hungry sheep look for grass; herd them to it. They only eat if the dog keeps away.',
         'The ring around a sheep shows what it ate today. Green = fully fed.',
         'Hungry sheep lose health overnight and can starve.',
         'Get every sheep into the stable before nightfall. Then the wolves come!',
         'Wolves may attack by day too. Chase them off before they bite.',
-        'A fed ram (grey, horns) + a fed ewe (white) = a lamb overnight.',
+        'A fed ram (grey, horns) + a fed ewe (white) in the stable = a lamb overnight.',
         'Running tires the dog. Its food bowl next to the stable restores energy.',
         'Seasons change every 3 days. Summer days are long, winter days short and cold!',
         'No rams or no ewes left = game over.',
@@ -252,7 +272,7 @@
         'Winter! Short, cold days. Keep the sheep warm in the stable',
       ],
       lambs: (n) => `${pl(n, 'lamb', 'lambs')} born (${pl(n, 'fed pair', 'fed pairs')})!`,
-      noLambs: 'no lambs (needs a fed ram and a fed ewe)',
+      noLambs: 'no lambs (needs a fed ram and a fed ewe in the stable)',
       starved: (n) => `${pl(n, 'sheep', 'sheep')} starved`,
       dayWolves: (n) => (n > 1 ? `${n} wolves are coming! Chase them away!` : 'A wolf! Chase it away with your dog!'),
       dusk: (winter) => (winter ? 'Evening already, and it is freezing! Bring the sheep in!' : 'Evening — bring the sheep into the stable!'),
@@ -263,6 +283,9 @@
       baa: ['Bahh!', 'Bahh!', 'Bahh!', 'Bahh!', 'Mäh!'], baaPanic: 'BAHH!!', brr: 'Brrr!',
       full: 'full!', froze: 'froze!', munch: 'munch!', givesUp: 'gives up!', bitten: 'bitten!',
       ramKilled: 'Ram killed!', eweKilled: 'Ewe killed!', growl: 'Grrr!', howl: 'Awoooo!', quack: 'quack', quack2: 'quack!',
+      tractor: 'The farmer\'s tractor is here today. Wolves keep away from it!', honk: 'Tuut tuut!', beep: 'beep beep',
+      hello: 'Grüezi!', goodDog: 'Good dog!', hopp: 'Hopp hopp!', bye: 'Tschüss!', dig: 'Time to dig!', done: 'Done!',
+      prost: 'Prost!', ahh: 'Ahh!', shovel: 'So much snow!',
     },
     de: {
       seasons: ['Frühling', 'Sommer', 'Herbst', 'Winter'],
@@ -276,12 +299,12 @@
       difficulty: ['LEICHT', 'NORMAL', 'SCHWER', 'BRUTAL'],
       rules: [
         'Die Schafe laufen vor deinem Bernhardiner weg: so treibst du sie.',
-        'Treib die Schafe aufs saftige Gras. Sie fressen nur, wenn der Hund Abstand hält.',
+        'Hungrige Schafe suchen Gras; treib sie hin. Sie fressen nur, wenn der Hund Abstand hält.',
         'Der Ring um ein Schaf zeigt, was es heute gefressen hat. Grün = satt.',
         'Hungrige Schafe verlieren über Nacht Gesundheit und können verhungern.',
         'Bring alle Schafe vor Einbruch der Nacht in den Stall. Dann kommen die Wölfe!',
         'Wölfe greifen auch tagsüber an. Verjag sie, bevor sie zubeißen.',
-        'Ein satter Widder (grau, Hörner) + eine satte Aue (weiß) = ein Lamm über Nacht.',
+        'Satter Widder (grau, Hörner) + satte Aue (weiß) im Stall = ein Lamm über Nacht.',
         'Rennen ermüdet den Hund. Sein Futternapf beim Stall gibt neue Kraft.',
         'Alle 3 Tage wechselt die Jahreszeit. Sommertage sind lang, Wintertage kurz und kalt!',
         'Keine Widder oder keine Auen mehr = Spiel vorbei.',
@@ -305,7 +328,7 @@
         'Winter! Kurze, kalte Tage. Halte die Schafe im Stall warm',
       ],
       lambs: (n) => `${n === 1 ? '1 Lamm' : n + ' Lämmer'} geboren (${n === 1 ? '1 sattes Paar' : n + ' satte Paare'})!`,
-      noLambs: 'keine Lämmer (dazu braucht es einen satten Widder und eine satte Aue)',
+      noLambs: 'keine Lämmer (dazu braucht es einen satten Widder und eine satte Aue im Stall)',
       starved: (n) => `${n === 1 ? '1 Schaf' : n + ' Schafe'} verhungert`,
       dayWolves: (n) => (n > 1 ? `${n} Wölfe kommen! Verjag sie!` : 'Ein Wolf! Verjag ihn mit deinem Hund!'),
       dusk: (winter) => (winter ? 'Schon Abend, und es ist eiskalt! Bring die Schafe rein!' : 'Abend — bring die Schafe in den Stall!'),
@@ -316,6 +339,9 @@
       baa: ['Mäh!', 'Mäh!', 'Bääh!', 'Määh!', 'Mäh!'], baaPanic: 'MÄÄH!!', brr: 'Brrr!',
       full: 'satt!', froze: 'erfroren!', munch: 'mampf!', givesUp: 'gibt auf!', bitten: 'gebissen!',
       ramKilled: 'Widder gerissen!', eweKilled: 'Aue gerissen!', growl: 'Grrr!', howl: 'Auuuuu!', quack: 'quak', quack2: 'quak!',
+      tractor: 'Heute ist der Traktor des Bauern da. Wölfe halten Abstand!', honk: 'Tüüt tüüt!', beep: 'piep piep',
+      hello: 'Grüezi!', goodDog: 'Braver Hund!', hopp: 'Hopp hopp!', bye: 'Tschüss!', dig: 'Ans Graben!', done: 'Fertig!',
+      prost: 'Prost!', ahh: 'Ahh!', shovel: 'So viel Schnee!',
     },
   };
   // translated text: tr('key') or tr('key', args...) for texts with numbers in them
@@ -326,7 +352,7 @@
   const seasonName = (i = seasonIndex()) => tr('seasons')[i];
 
   // Animal sounds: floating text that rises and fades (like the ducks' quack)
-  const SAY_COLOR = { dog: '#ffe0b0', sheep: '#ffffff', wolf: '#ffd23f' };
+  const SAY_COLOR = { dog: '#ffe0b0', sheep: '#ffffff', wolf: '#ffd23f', tractor: '#ffc2b0', farmer: '#c8e6ff' };
   function say(ent, text, kind) {
     addFloat(ent.x, ent.y, text, SAY_COLOR[kind] || '#fff6c8');
   }
@@ -342,6 +368,8 @@
   function newSheep(sex) {
     return {
       x: 0, y: 0, vx: 0, vy: 0, r: CFG.sheep.r,
+      lamb: false,      // born last night: small, eats less; grown up the next morning
+      nights: 99,       // nights lived (lambs start at 0)
       sex: sex || (Math.random() < 0.5 ? 'm' : 'f'),
       food: 0,          // % eaten today (100 = fully fed)
       health: 100,      // %
@@ -359,6 +387,8 @@
 
   const countSex = (sex) => sheep.filter((s) => s.sex === sex).length;
   const fedCount = (sex) => sheep.filter((s) => s.sex === sex && s.food >= 100).length;
+  const fedInStable = (sex) => sheep.filter((s) => s.sex === sex && s.nights >= CFG.sheep.matureNights &&
+                                                  s.food >= 100 && inStable(s)).length;
   const unsafeSheep = () => sheep.filter((s) => !inStable(s));
 
   // Morning: the shepherd lets the flock out of the stable.
@@ -507,6 +537,18 @@
     return best;
   }
 
+  // Grass a hungry sheep would walk to (within `reach`; not across a stream unless it is frozen)
+  function grassToSeek(s, reach) {
+    let best = null, bestGap = reach;
+    for (const p of patches) {
+      if (p.amount <= 0) continue;
+      if (!isWinter() && streams.some((st) => sideOf(st, s) !== sideOf(st, p))) continue;
+      const gap = Math.hypot(p.x - s.x, p.y - s.y) - patchR(p);
+      if (gap < bestGap) { bestGap = gap; best = p; }
+    }
+    return best;
+  }
+
   // ---------------------------------------------------------------------------
   // Obstacles: trees (solid trunk, canopy you can hide under) and rocks (solid)
   // ---------------------------------------------------------------------------
@@ -623,7 +665,7 @@
     }
     const cum = [0];
     for (let i = 1; i < pts.length; i++) cum.push(cum[i - 1] + Math.hypot(pts[i].x - pts[i - 1].x, pts[i].y - pts[i - 1].y));
-    const st = { corner: { x: cx, y: cy }, p0, p1, pts, cum, len: cum[cum.length - 1], w: rand(W.width[0], W.width[1]) };
+    const st = { corner: { x: cx, y: cy }, p0, p1, pts, cum, len: cum[cum.length - 1], w: rand(W.width[0], W.width[1]), amp, k, ph };
     // bridges: one on a short stream, two on a long one (spread out, inside the pasture)
     const nb = st.len > 520 ? 2 : 1;
     st.bridges = [];
@@ -658,9 +700,14 @@
     }
     return best;
   }
-  // which side of the stream a point is on (+1 / -1), using the straight line p0 -> p1
+  // which side of the stream a point is on (+1 / -1), following the meanders
   function sideOf(st, p) {
-    return Math.sign((st.p1.x - st.p0.x) * (p.y - st.p0.y) - (st.p1.y - st.p0.y) * (p.x - st.p0.x)) || 1;
+    const dx = st.p1.x - st.p0.x, dy = st.p1.y - st.p0.y, L = Math.hypot(dx, dy);
+    const rx = p.x - st.p0.x, ry = p.y - st.p0.y;
+    const t = clamp((rx * dx + ry * dy) / (L * L), 0, 1);
+    const off = (dx * ry - dy * rx) / L;                       // distance from the straight line
+    const wig = st.amp ? st.amp * Math.sin(TAU * st.k * t + st.ph) : 0;   // where the meander is there
+    return Math.sign(off - wig) || 1;
   }
   function onBridge(p) {
     for (const st of streams) for (const B of st.bridges) {
@@ -872,7 +919,9 @@
       const rock = { x: pos.x, y: pos.y, r, space: r, pts };
       rocks.push(rock); all.push(rock);
     }
-    solids = [...trees, ...rocks, ...lakes.flatMap((l) => l.circles.map((c) => ({ x: c.x, y: c.y, r: c.r + 2 })))];
+    solids = [...trees, ...rocks, ...lakes.flatMap((l) => l.circles.map((c) => ({ x: c.x, y: c.y, r: c.r + 2 }))),
+              { x: FLAG.x, y: FLAG.y, r: 4 },    // the flag pole
+              { x: BENCH.x - 8, y: BENCH.y, r: 7 }, { x: BENCH.x + 8, y: BENCH.y, r: 7 }];   // the bench
     paintObstacleLayer();
   }
 
@@ -1420,7 +1469,7 @@
     e.lpx = e.x; e.lpy = e.y;
     if (d > 30) return;                                // teleported (new morning)
     e.stepD += d;
-    const stride = kind === 'sheep' ? 9 : kind === 'wolf' ? 13 : 11;
+    const stride = kind === 'sheep' ? 9 : kind === 'wolf' ? 13 : kind === 'boot' ? 12 : 11;
     if (e.stepD < stride) return;
     e.stepD = 0;
     if (inStable(e) || e.x < 0 || e.x > FW || e.y < 0 || e.y > FH) return;
@@ -1435,6 +1484,7 @@
     if (dog) trackPrints(dog, 'dog');
     for (const s of sheep) trackPrints(s, 'sheep');
     for (const w of wolves) trackPrints(w, 'wolf');
+    if (farmerOut()) trackPrints(farmer, 'boot');
     for (const p of prints) p.t -= dt;
     prints = prints.filter((p) => p.t > 0);
     if (prints.length > 2500) prints.splice(0, prints.length - 2500);
@@ -1453,6 +1503,9 @@
       if (p.kind === 'sheep') {                       // cloven hoof: two little halves
         dot(0.6, -0.95, 1.5, 0.75);
         dot(0.6, 0.95, 1.5, 0.75);
+      } else if (p.kind === 'boot') {                 // the farmer's boot: sole and heel
+        dot(1.2, 0, 2.6, 1.4);
+        dot(-2.6, 0, 1.3, 1.25);
       } else {                                        // paw: pad + four toes
         const k = p.kind === 'wolf' ? 1.2 : 1;
         dot(-0.6 * k, 0, 1.3 * k, 1.5 * k);
@@ -1579,7 +1632,7 @@
     if (sp < 1) return [vx, vy];
     const ux = vx / sp, uy = vy / sp, px = -uy, py = ux;
     let ax = 0, ay = 0;
-    for (const o of solids) {
+    for (const o of tractorHere() ? solids.concat(tractor.circles) : solids) {
       const tx = o.x - e.x, ty = o.y - e.y;
       const ahead = tx * ux + ty * uy;
       const look = 45 + o.r;
@@ -1606,10 +1659,10 @@
   // ---------------------------------------------------------------------------
   // Wolves
   // ---------------------------------------------------------------------------
-  // N // 2 + 1 wolves for N sheep, scaled by the player's wolf setting,
+  // N // 2 wolves for N sheep, scaled by the player's wolf setting,
   // then randomly +/- 20% (at least one).
   function packBase(nSheep) {
-    return (Math.floor(nSheep / 2) + 1) * (1 + state.wolfAdj / 100);
+    return Math.floor(nSheep / 2) * (1 + state.wolfAdj / 100);
   }
   function packSize(nSheep) {
     const f = 1 + rand(-CFG.pack.randomness, CFG.pack.randomness);
@@ -1678,6 +1731,8 @@
     oldPatches = [];
     state.confirmExit = false;
     bowl.food = CFG.bowl.food;
+    state.tractorDays = null;
+    planTractor();
     scheduleDayWolves();
     if (isWinter()) pickSnow();
     showMsg(tr('firstDay', seasonName()) + (isWinter() ? ` — ${tr('snow')[state.snowLevel]}` : ''), 5);
@@ -1686,7 +1741,14 @@
   // Called at midnight: hunger, births, then the next morning (5:30).
   function morning() {
     const prevSeason = seasonIndex();
-    const fedM = fedCount('m'), fedF = fedCount('f');
+    // One more night for everyone. Lambs grow up after their first night,
+    // and can have lambs themselves from their second night on (matureNights).
+    for (const s of sheep) {
+      s.nights = (s.nights ?? 99) + 1;
+      if (s.lamb) { s.lamb = false; s.r = CFG.sheep.r; }
+    }
+    // only grown-up, fully fed sheep that spend the night in the stable can have lambs
+    const fedM = fedInStable('m'), fedF = fedInStable('f');
 
     // Hunger
     let starvedNow = 0;
@@ -1702,7 +1764,11 @@
     // Births: each pair of a fed ram + a fed ewe gets one lamb
     // (2 rams + 2 ewes -> 2 lambs, 3 rams + 1 ewe -> 1 lamb)
     const births = Math.min(fedM, fedF);
-    for (let i = 0; i < births; i++) sheep.push(newSheep());
+    for (let i = 0; i < births; i++) {
+      const l = newSheep();
+      l.lamb = true; l.nights = 0; l.r = CFG.sheep.r * CFG.sheep.lambSize;
+      sheep.push(l);
+    }
     state.born += births;
 
     for (const s of sheep) s.food = 0;
@@ -1720,6 +1786,7 @@
     for (const p of patches) p.amount = p.max;
     releaseFlock();
     state.best = Math.max(state.best, sheep.length);
+    planTractor();
     scheduleDayWolves();
 
     const parts = [tr('day', state.day)];
@@ -1833,6 +1900,7 @@
   }
 
   function updateDog(dt) {
+    if (dog.happyT > 0) dog.happyT -= dt;
     const wp = dogWaypoint();
     const dx = wp.x - dog.x, dy = wp.y - dog.y;
     const d = Math.hypot(dx, dy);
@@ -1945,6 +2013,31 @@
       alarm = Math.max(alarm, f);
     }
 
+    // The farmer: sheep make way for him (on the same side of the stable wall)
+    if (farmerOut() && inStable(farmer) === inside) {
+      const fd = dist(s, farmer), R = CFG.farmer.sheepRadius;
+      if (fd < R && fd > 0.01) {
+        const f = 1 - fd / R;
+        dx += ((s.x - farmer.x) / fd) * C.maxSpeed * 0.5 * f; dy += ((s.y - farmer.y) / fd) * C.maxSpeed * 0.5 * f;
+        alarm = Math.max(alarm, f * 0.5);
+      }
+    }
+
+    // A moving tractor: sheep step out of its way
+    if (tractor.moving && !inside) {
+      const td = tractorDist(s), R = CFG.tractor.scareRadius;
+      if (td < R) {
+        const f = 1 - td / R;
+        let [ax, ay] = awayFromTractor(s);
+        if (Math.abs(s.x - GATE.cx) < TR.W / 2 + s.r) {      // right in front of it: step aside
+          ax += (s.x >= GATE.cx ? 1 : -1) * 1.5;
+          const n = Math.hypot(ax, ay); ax /= n; ay /= n;
+        }
+        dx += ax * C.maxSpeed * 0.7 * f; dy += ay * C.maxSpeed * 0.7 * f;
+        alarm = Math.max(alarm, f * 0.8);
+      }
+    }
+
     // Panic from wolves: run away, but in a random direction.
     // Sheep inside the stable feel safe and stay put.
     s.freeze = false;
@@ -2010,28 +2103,58 @@
     const onPatch = near && near.d < patchR(near.p) + 2;
     if (onPatch && s.food < 100) {
       const p = near.p;
-      const bite = Math.min(C.eatRate * dt, 100 - s.food, p.amount);
-      s.food += bite;
-      p.amount -= bite;
+      // a lamb only needs part of an adult's food: it is full sooner and eats less grass
+      const need = s.lamb ? C.lambFood : 1;
+      const grass = Math.min(C.eatRate * dt, (100 - s.food) * need, p.amount);
+      s.food = Math.min(100, s.food + grass / need);
+      p.amount -= grass;
       s.eating = true;
       if (s.food >= 99.999) { s.food = 100; addFloat(s.x, s.y, tr('full'), '#d6ffb0'); }
     }
 
-    // Evening / night: sheep close to the door want to go in by themselves
+    // Evening / night: every fully fed sheep walks home to the stable by itself, at a normal walk.
+    // (Hungry ones keep eating or stroll around: the dog has to bring them in, at least onto the patio.)
+    // Across a stream it takes the nearest bridge; it steers around rocks, trunks and lakes.
+    // A hungry sheep standing on the patio in front of the door goes in too (and keeps going once it started).
+    const evening = ph === 'dusk' || ph === 'night';
+    if (inside || !evening) s.homeNear = false;
+    else if (onPatio(s)) s.homeNear = true;
     let goingHome = false;
-    if (!inside && (ph === 'dusk' || ph === 'night') && panic < 0.3) {
+    if (!inside && evening && panic < 0.3 && (s.food >= 100 || s.homeNear)) {
+      goingHome = true;
       const doorX = S.cx, doorY = S.bottom;
       const dd = Math.hypot(s.x - doorX, s.y - doorY);
-      if (dd < C.homeRadius) {
-        goingHome = true;
-        // first line up below the door, then walk in
-        const lined = Math.abs(s.x - doorX) < S.door / 2 - 14 || s.y < doorY;
-        const gx = doorX + s.exitOff * 0.5, gy = lined ? S.bottom - 40 : S.bottom + 18;
-        const dg = Math.max(1, Math.hypot(gx - s.x, gy - s.y));
-        const pull = C.grazeSpeed * 2.2 * (0.5 + 0.5 * (1 - dd / C.homeRadius));
-        dx += ((gx - s.x) / dg) * pull;
-        dy += ((gy - s.y) / dg) * pull;
+      let gx, gy;
+      const far = !isWinter() && streams.find((st) => sideOf(st, s) === st.side);   // on the far side of a stream?
+      if (far) {
+        let B = far.bridges[0], bd = 1e9;
+        for (const b of far.bridges) { const d = Math.hypot(b.x - s.x, b.y - s.y); if (d < bd) { bd = d; B = b; } }
+        // the bridge runs across the stream; walk onto it, then off on the stable side
+        let nx = -B.ty, ny = B.tx;
+        if (sideOf(far, { x: B.x + nx * 20, y: B.y + ny * 20 }) === far.side) { nx = -nx; ny = -ny; }
+        const along = (s.x - B.x) * nx + (s.y - B.y) * ny, lat = (s.x - B.x) * B.tx + (s.y - B.y) * B.ty;
+        const ax = B.x - nx * (B.len / 2 + 4), ay = B.y - ny * (B.len / 2 + 4);
+        const atBridge = (along > -(B.len / 2 + 14) && Math.abs(lat) < B.wid / 2 + 8) || Math.hypot(ax - s.x, ay - s.y) < 16;
+        if (atBridge) {                                              // at / on the bridge: walk across
+          gx = B.x + nx * (B.len / 2 + 30); gy = B.y + ny * (B.len / 2 + 30);
+        } else {                                                     // go to the bridge's far end first
+          gx = ax; gy = ay;
+        }
+      } else if (s.y < S.bottom + 10 && (s.x < S.x || s.x > S.x + S.w)) {
+        // beside the stable: first walk around the corner
+        gx = s.x > S.cx ? S.x + S.w + 18 : S.x - 18;
+        gy = S.bottom + 22;
+      } else {
+        // line up below the door, then walk in
+        const lined = Math.abs(s.x - doorX) < S.door / 2 - 14 && dd < 60;
+        gx = doorX + s.exitOff * 0.5;
+        gy = lined ? S.bottom - 40 : S.bottom + 18;
       }
+      const dg = Math.max(1, Math.hypot(gx - s.x, gy - s.y));
+      const pull = C.grazeSpeed * 1.2;   // their usual walking pace (no pauses)
+      let hx = ((gx - s.x) / dg) * pull, hy = ((gy - s.y) / dg) * pull;
+      [hx, hy] = avoidSolids(s, hx, hy, dg);
+      dx += hx; dy += hy;
     }
 
     // Just walked out of the stable during the day: keep going for a bit
@@ -2064,12 +2187,16 @@
           dy += Math.sin(s.heading) * C.grazeSpeed * 0.6;
         }
       }
+    } else if (calm && !goingHome && !s.freeze && ph === 'day' && s.food >= 100 && s.leaveT <= 0 &&
+               stableDist(s) < C.parkRadius) {
+      // Parked: a full sheep next to the stable just waits there (it goes in by itself in the evening)
+      s.grazing = true;
     } else if (calm && !goingHome && !s.freeze) {
       s.wanderT -= dt;
       if (s.leaveT > 0) s.leaveT -= dt;
       if (s.wanderT <= 0) {
         s.wanderT = rand(1.5, 4.5);
-        s.grazing = Math.random() < (near ? 0.75 : C.grazePause);
+        s.grazing = Math.random() < (near ? 0.75 : s.seeking ? C.grazePause * 0.5 : C.grazePause);
         s.trot = !near && Math.random() < 0.15;   // sometimes trot off a bit faster
         s.heading += rand(-1.6, 1.6);
         s.headJit = rand(-0.4, 0.4);
@@ -2092,6 +2219,12 @@
         if (s.x < em || s.x > FW - em || s.y < em || s.y > FH - em) {
           s.heading = Math.atan2(FH / 2 - s.y, FW / 2 - s.x) + s.headJit;
         }
+        // hungry sheep amble over to grass they can see (with pauses, not in a straight line)
+        if (daytime && s.food < 100 && s.leaveT <= 0) {
+          const g = grassToSeek(s, C.grassSeek);
+          s.seeking = !!g;
+          if (g) { s.heading = Math.atan2(g.y - s.y, g.x - s.x) + s.headJit; s.trot = false; sp = C.grazeSpeed * 1.3; }
+        } else s.seeking = false;
         // calm sheep don't wander into a stream by themselves (they turn along the bank)
         const ax = s.x + Math.cos(s.heading) * 22, ay = s.y + Math.sin(s.heading) * 22;
         if (!isWinter() && !inStream(s) && nearStream(ax, ay, 4) && !nearBridge(ax, ay, 4)) s.heading += Math.PI * 0.6 * (s.headJit >= 0 ? 1 : -1);
@@ -2258,6 +2391,23 @@
       }
     }
 
+    // wolves don't like the farmer's tractor: they keep their distance
+    if (w.mode !== 'leave' && tractorHere()) {
+      const td = tractorDist(w), R = CFG.tractor.wolfFear;
+      if (td < R) {
+        const f = clamp((R - td) / (R * 0.5), 0, 1), [ax, ay] = awayFromTractor(w);
+        dx = dx * (1 - f) + ax * C.fleeSpeed * f; dy = dy * (1 - f) + ay * C.fleeSpeed * f;
+      }
+    }
+
+    if (w.mode !== 'leave' && farmerOut() && !inStable(farmer)) {
+      const fd = dist(w, farmer), R = CFG.farmer.wolfFear;
+      if (fd < R && fd > 0.01) {
+        const f = clamp((R - fd) / (R * 0.5), 0, 1);
+        dx = dx * (1 - f) + ((w.x - farmer.x) / fd) * C.fleeSpeed * f; dy = dy * (1 - f) + ((w.y - farmer.y) / fd) * C.fleeSpeed * f;
+      }
+    }
+
     [dx, dy] = avoidSolids(w, dx, dy);
     const k = Math.min(1, 5 * dt);
     w.vx += (dx - w.vx) * k;
@@ -2318,14 +2468,259 @@
       for (let j = i + 1; j < sheep.length; j++) separate(sheep[i], sheep[j], 1, 1);
       separate(dog, sheep[i], 0, 1);
     }
+    if (farmerOut()) {
+      for (const s of sheep) separate(farmer, s, 0, 1);
+      separate(farmer, dog, 0, 1);
+    }
     for (let i = 0; i < wolves.length; i++) {
       separate(dog, wolves[i], 0, 1);
       for (let j = i + 1; j < wolves.length; j++) separate(wolves[i], wolves[j], 1, 1);
     }
 
-    for (const s of sheep) { collideSolids(s); collideWalls(s); clampToField(s); }
-    collideSolids(dog); collideWalls(dog); clampToField(dog);
-    for (const w of wolves) { collideSolids(w); pushOutOfStable(w); }
+    for (const s of sheep) { collideSolids(s); collideTractor(s); collideWalls(s); clampToField(s); }
+    collideSolids(dog); collideTractor(dog); collideWalls(dog); clampToField(dog);
+    for (const w of wolves) { collideSolids(w); collideTractor(w); pushOutOfStable(w); }
+  }
+
+  // ---------------------------------------------------------------------------
+  // The farmer's tractor: on some days (CFG.tractor.daysPerSeason) the gate opens in the
+  // morning, the tractor drives in and parks along the stable, and it leaves before evening.
+  // It is solid, it honks at animals in its way, moving it scares sheep, and wolves keep away.
+  // The sheep still can't get out through the open gate.
+  // ---------------------------------------------------------------------------
+  const TR = { W: 36, L: 64 };
+  const tractor = {
+    mode: 'away', y: -80, gate: 0, honkCD: 0, beepT: 0, puffT: 0, puffs: [], moving: false,
+    circles: [{ x: 0, y: 0, r: 18 }, { x: 0, y: 0, r: 18 }, { x: 0, y: 0, r: 18 }],
+  };
+  const tractorHere = () => state.screen !== 'title' && tractor.y > -TR.L / 2 - 4;
+  const tractorParkY = () => bowl.y - 16 - TR.L / 2;
+  const tractorLeaveHour = () => season().evening[0] - CFG.tractor.leaveEarly;
+
+  // At the start of each day: is it a tractor day?
+  function planTractor() {
+    if (seasonDay() === 0 || !state.tractorDays) {
+      const days = [...Array(CLOCK.seasonDays).keys()].sort(() => Math.random() - 0.5);
+      state.tractorDays = days.slice(0, CFG.tractor.daysPerSeason);
+    }
+    state.tractorToday = state.tractorDays.includes(seasonDay());
+    Object.assign(tractor, { mode: 'away', y: -80, gate: 0, puffs: [], moving: false });
+    Object.assign(farmer, { mode: 'aboard', path: [], petT: 0 });
+    dig.on = false;
+  }
+
+  // distance from a point to the tractor's body (0 inside)
+  function tractorDist(p) {
+    const dx = Math.max(GATE.cx - TR.W / 2 - p.x, 0, p.x - (GATE.cx + TR.W / 2));
+    const dy = Math.max(tractor.y - TR.L / 2 - p.y, 0, p.y - (tractor.y + TR.L / 2));
+    return Math.hypot(dx, dy);
+  }
+  // unit vector from the tractor's body to a point
+  function awayFromTractor(p) {
+    const qx = clamp(p.x, GATE.cx - TR.W / 2, GATE.cx + TR.W / 2), qy = clamp(p.y, tractor.y - TR.L / 2, tractor.y + TR.L / 2);
+    let ax = p.x - qx, ay = p.y - qy;
+    if (Math.hypot(ax, ay) < 0.5) { ax = p.x - GATE.cx || 1; ay = 0; }
+    const n = Math.hypot(ax, ay);
+    return [ax / n, ay / n];
+  }
+
+  // Something in the way (dir = +1 driving in, -1 backing out)?
+  function tractorBlocked(dir) {
+    const edge = tractor.y + dir * TR.L / 2;
+    for (const a of [...sheep, dog, ...wolves]) {
+      if (Math.abs(a.x - GATE.cx) > TR.W / 2 + a.r - 2) continue;
+      const ahead = (a.y - edge) * dir;
+      if (ahead > -6 && ahead < a.r + 8) {
+        if (tractor.honkCD <= 0) { say({ x: GATE.cx, y: Math.max(14, edge) }, tr('honk'), 'tractor'); tractor.honkCD = 2.2; }
+        return true;
+      }
+    }
+    return false;
+  }
+
+  // The farmer: gets off the parked tractor, walks over the patio into the stable and spends the
+  // day in there. Before evening he walks back and drives off. Sheep make way for him, wolves keep
+  // away, and when the dog comes close it wags its tail and gets a pat.
+  const farmer = { mode: 'aboard', x: 0, y: 0, r: 9, vx: 0, vy: 0, ang: Math.PI / 2, path: [], walkPh: 0,
+                   moving: false, petT: 0, petCD: 0, idleT: 0, hopCD: 0, didWork: false, workPh: 0, sipT: 0, sips: 0 };
+  // where he digs today (dirt hole in front of the stable; in winter he shovels snow on the patio)
+  const dig = { x: 0, y: 0, prog: 0, winter: false, on: false };
+  const DOOR_IN = { x: S.cx, y: S.bottom - 32 }, DOOR_OUT = { x: S.cx, y: S.bottom + 20 };
+  const BELOW_BENCH = { x: BENCH.x, y: BENCH.y + 34 };
+  // how far through his day the farmer is (0 = tractor arrived, 1 = time to leave)
+  const farmerDay = () => clamp((state.hour - CFG.tractor.arrive) / Math.max(0.5, tractorLeaveHour() - CFG.farmer.walkBack - CFG.tractor.arrive), 0, 1);
+  const farmerOut = () => tractorHere() && farmer.mode !== 'aboard';
+  const besideCab = () => ({ x: GATE.cx + TR.W / 2 + 12, y: tractor.y - 12 });
+  const belowBowl = () => ({ x: GATE.cx + TR.W / 2 + 12, y: bowl.y + 26 });
+
+  function farmerGetsOff() {
+    const a = besideCab();
+    Object.assign(farmer, { mode: 'off', x: a.x - 6, y: a.y, vx: 0, vy: 0, petT: 0, petCD: 2, idleT: 0, ang: Math.PI / 2 });
+    farmer.path = [a, belowBowl(), BELOW_BENCH, { x: S.cx + 18, y: S.bottom + 30 }, { x: S.cx, y: S.bottom + 8 }, DOOR_IN];
+    Object.assign(farmer, { didWork: false, sips: 0, lpx: undefined });
+    say(farmer, tr('hello'), 'farmer');
+  }
+  function farmerGoesBack() {
+    const back = [BELOW_BENCH, belowBowl(), besideCab()];
+    if (inStable(farmer) || farmer.y < S.bottom + 4) {          // in the stable: out through the door first
+      farmer.path = [DOOR_IN, DOOR_OUT, ...back];
+    } else farmer.path = farmer.x > GATE.cx && farmer.y < bowl.y ? [besideCab()] : farmer.x > BENCH.x + 20 ? back.slice(1) : back;
+    farmer.mode = 'return';
+  }
+
+  function updateFarmer(dt) {
+    const F = farmer, C = CFG.farmer;
+    F.moving = false;
+    if (!farmerOut()) return;
+    F.petCD -= dt; F.hopCD -= dt;
+    const dd = dist(F, dog);
+    const sameSide = inStable(dog) === inStable(F);
+    // petting the dog
+    if (F.petT > 0) {
+      F.petT -= dt;
+      F.ang = Math.atan2(dog.y - F.y, dog.x - F.x);
+      dog.happyT = Math.max(dog.happyT || 0, 0.5);
+      if (dd > C.petRadius + 25) F.petT = 0;      // the dog ran off
+      return;
+    }
+    if (F.petCD <= 0 && sameSide && dd < C.petRadius) {
+      F.petT = 2.4; F.petCD = 9;
+      dog.happyT = 3;
+      say(F, tr('goodDog'), 'farmer');
+      return;
+    }
+    // walking along the path / pottering about inside
+    // His day: in the stable -> some work outside -> (not in winter) a beer on the bench -> back to the tractor.
+    // In winter he only pops out briefly to shovel snow, then goes back in where it's warm.
+    const winter = isWinter(), f = farmerDay();
+    const W = winter ? [0.35, 0.6] : [0.3, 0.6];          // work starts / ends (share of his day)
+    if (!F.path.length) {
+      if (F.mode === 'off') { F.mode = 'inside'; F.idleT = rand(2, 5); }
+      else if (F.mode === 'return') { F.mode = 'aboard'; say({ x: GATE.cx, y: tractor.y }, tr('bye'), 'farmer'); return; }
+      else if (F.mode === 'toWork') {
+        F.mode = 'work'; F.workPh = 0;
+        say(F, tr(winter ? 'shovel' : 'dig'), 'farmer');
+      } else if (F.mode === 'toBench') {
+        F.mode = 'bench'; F.sipT = 2.5;
+      } else if (F.mode === 'inside') {
+        if (!F.didWork && f >= W[0]) {
+          // out to work: a spot in front of the stable (snow on the patio in winter)
+          const spot = winter ? { x: S.cx + 30 + rand(-6, 6), y: S.bottom + 34 } : { x: S.cx - 30 + rand(-18, 18), y: P.y + P.h + 30 + rand(-4, 8) };
+          Object.assign(dig, { x: spot.x, y: spot.y, prog: 0, winter, on: true });
+          F.path = [DOOR_IN, DOOR_OUT, { x: spot.x - 13, y: spot.y }];
+          F.mode = 'toWork';
+          if (winter) say(F, tr('brr'), 'farmer');
+        } else {
+          F.idleT -= dt;
+          if (F.idleT <= 0) {
+            F.path = [{ x: rand(S.x + 26, S.x + S.w - 26), y: rand(S.y + 26, S.bottom - 34) }];
+            F.idleT = rand(3, 8);
+          }
+        }
+      } else if (F.mode === 'work') {
+        F.ang = Math.atan2(dig.y - F.y, dig.x - F.x);
+        F.workPh += dt;
+        dig.prog = clamp(Math.max((f - W[0]) / (W[1] - W[0] - 0.04), F.workPh / 7), dig.prog, 1);
+        if (f >= W[1] && F.workPh > 6) {                                    // works at least a few seconds
+          F.didWork = true;
+          say(F, tr('done'), 'farmer');
+          if (winter) { F.path = [DOOR_OUT, DOOR_IN]; F.mode = 'off'; }           // back into the warm stable
+          else { F.path = [{ x: BENCH.x, y: BELOW_BENCH.y + 6 }, BENCH_SEAT]; F.mode = 'toBench'; }
+        }
+      } else if (F.mode === 'bench') {
+        F.ang = Math.PI / 2;                                                  // looking out over the pasture
+        F.sipT -= dt;
+        if (F.sipT <= 0) {
+          F.sips++;
+          if (F.sips === 1) say(F, tr('prost'), 'farmer');
+          else if (F.sips % 3 === 0) say(F, tr('ahh'), 'farmer');
+          F.sipT = rand(4, 7);
+        }
+      }
+    }
+    F.vx = F.vy = 0;
+    if (F.path.length) {
+      const t = F.path[0], d = Math.hypot(t.x - F.x, t.y - F.y);
+      const sp = C.speed * (F.mode === 'inside' ? 0.6 : 1);
+      if (d < 3) F.path.shift();
+      else {
+        F.vx = ((t.x - F.x) / d) * sp; F.vy = ((t.y - F.y) / d) * sp;
+        F.x += ((t.x - F.x) / d) * Math.min(d, sp * dt);
+        F.y += ((t.y - F.y) / d) * Math.min(d, sp * dt);
+        const want = Math.atan2(t.y - F.y, t.x - F.x);
+        F.ang += Math.atan2(Math.sin(want - F.ang), Math.cos(want - F.ang)) * Math.min(1, 8 * dt);
+        F.moving = true;
+        F.walkPh += dt * 9;
+        // a sheep right in his way
+        if (F.hopCD <= 0 && sheep.some((s) => Math.hypot(s.x - F.x - Math.cos(F.ang) * 14, s.y - F.y - Math.sin(F.ang) * 14) < s.r + 6)) {
+          say(F, tr('hopp'), 'farmer'); F.hopCD = 4;
+        }
+      }
+    }
+  }
+
+  function updateTractor(dt) {
+    const C = CFG.tractor, T = tractor;
+    T.honkCD -= dt;
+    const h = state.hour, leave = tractorLeaveHour();
+    T.moving = false;
+    if (T.mode === 'away') {
+      if (state.tractorToday && h >= C.arrive && h < leave - 1 && phaseName() === 'day') T.mode = 'opening';
+    } else if (T.mode === 'opening') {
+      T.gate = Math.min(1, T.gate + dt / 1.3);
+      if (T.gate >= 1) {
+        T.mode = 'in'; T.y = -TR.L / 2 - 6;
+        showMsg(tr('tractor'), 5.5);
+        say({ x: GATE.cx, y: 16 }, tr('honk'), 'tractor'); T.honkCD = 2;
+        if (!inStable(dog) && dog.woofCD <= 0) { say(dog, tr('woof2'), 'dog'); dog.woofCD = 2; }
+      }
+    } else if (T.mode === 'in') {
+      if (!tractorBlocked(1)) { T.y += C.speed * dt; T.moving = true; }
+      if (T.y >= tractorParkY()) { T.y = tractorParkY(); T.mode = 'parked'; T.circles.forEach((c, i) => { c.x = GATE.cx; c.y = T.y + (i - 1) * 20; }); farmerGetsOff(); }
+    } else if (T.mode === 'parked') {
+      // the farmer heads back a bit early (walking takes a while), then they drive off
+      if (h >= leave - CFG.farmer.walkBack || phaseName() !== 'day') {
+        if (farmer.mode === 'aboard') { T.mode = 'out'; T.beepT = 0.8; }   // off we go
+        else if (farmer.mode !== 'return') farmerGoesBack();
+      }
+    } else if (T.mode === 'out') {
+      if (!tractorBlocked(-1)) {
+        T.y -= C.speed * 0.7 * dt; T.moving = true;
+        T.beepT -= dt;
+        if (T.beepT <= 0 && T.y > 20) { say({ x: GATE.cx, y: T.y + TR.L / 2 }, tr('beep'), 'tractor'); T.beepT = 1.6; }
+      }
+      if (T.y < -TR.L / 2 - 8) { T.mode = 'closing'; T.y = -80; }
+    } else if (T.mode === 'closing') {
+      T.gate = Math.max(0, T.gate - dt / 1.3);
+      if (T.gate <= 0) T.mode = 'away';
+    }
+    // collision circles along the body
+    T.circles.forEach((c, i) => { c.x = GATE.cx; c.y = T.y + (i - 1) * 20; });
+    // exhaust puffs while the engine runs
+    if (T.mode === 'in' || T.mode === 'out') {
+      T.puffT -= dt;
+      if (T.puffT <= 0) {
+        T.puffs.push({ x: GATE.cx + 5, y: T.y + 2, t: 0, life: rand(0.8, 1.2), dx: rand(-5, 5), dy: rand(-5, 5) });
+        T.puffT = T.moving ? 0.12 : 0.3;
+      }
+    }
+    for (const p of T.puffs) { p.t += dt; p.x += p.dx * dt; p.y += p.dy * dt; }
+    T.puffs = T.puffs.filter((p) => p.t < p.life);
+  }
+
+  // Push a circle out of the tractor
+  function collideTractor(e) {
+    if (!tractorHere()) return;
+    for (const o of tractor.circles) {
+      let nx = e.x - o.x, ny = e.y - o.y;
+      const d = Math.hypot(nx, ny), min = o.r + e.r;
+      if (d < min) {
+        if (d < 1e-6) { nx = 1; ny = 0; } else { nx /= d; ny /= d; }
+        e.x = o.x + nx * min; e.y = o.y + ny * min;
+        const vn = e.vx * nx + e.vy * ny;
+        if (vn < 0) { e.vx -= vn * nx; e.vy -= vn * ny; }
+      }
+    }
   }
 
   // ---------------------------------------------------------------------------
@@ -2343,6 +2738,8 @@
     state.spawnQ = state.spawnQ.filter((q) => q.t > 0);
 
     applyArrowKeys();
+    updateTractor(dt);
+    updateFarmer(dt);
     updateDog(dt);
     updateDucks(dt);
     updateStreams(dt);
@@ -2407,9 +2804,14 @@
     // wooden fence around the pasture
     g.strokeStyle = '#8a5a2b';
     g.lineWidth = 4;
-    g.strokeRect(4, 4, FW - 8, FH - 8);
+    g.beginPath();                                   // (with an opening for the gate at the top)
+    g.moveTo(GATE.x0, 4); g.lineTo(4, 4); g.lineTo(4, FH - 4); g.lineTo(FW - 4, FH - 4); g.lineTo(FW - 4, 4); g.lineTo(GATE.x1, 4);
+    g.stroke();
     g.fillStyle = '#6b4320';
-    for (let x = 4; x <= FW - 4; x += 48) { g.fillRect(x - 3, 1, 6, 7); g.fillRect(x - 3, FH - 8, 6, 7); }
+    for (let x = 4; x <= FW - 4; x += 48) {
+      if (x < GATE.x0 - 4 || x > GATE.x1 + 4) g.fillRect(x - 3, 1, 6, 7);
+      g.fillRect(x - 3, FH - 8, 6, 7);
+    }
     for (let y = 4; y <= FH - 4; y += 48) { g.fillRect(1, y - 3, 7, 6); g.fillRect(FW - 8, y - 3, 7, 6); }
   })();
 
@@ -2442,6 +2844,451 @@
     }
   }
 
+  // Cobblestone patio (one picture per season; grass grows between the stones, snow in winter)
+  const patioTex = [];
+  function makePatio(si) {
+    const c = document.createElement('canvas');
+    const k = 2;                                     // painted at double resolution
+    c.width = (P.w + 8) * k; c.height = (P.h + 8) * k;
+    const g = c.getContext('2d');
+    g.scale(k, k);
+    g.translate(4, 4);
+    let seed = 4242;
+    const rnd = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
+    const winter = si === 3;
+    const blade = ['#4f8a2e', '#4e7e2c', '#8f7430', '#7f9070'][si];
+    const tuft = (x, y, n, len) => {
+      g.strokeStyle = blade; g.lineWidth = 0.8;
+      for (let i = 0; i < n; i++) {
+        const a = -Math.PI / 2 + rnd() * 1.6 - 0.8;
+        g.beginPath(); g.moveTo(x + rnd() * 3 - 1.5, y); g.lineTo(x + Math.cos(a) * len, y + Math.sin(a) * len); g.stroke();
+      }
+    };
+    // sand bed between the stones
+    g.fillStyle = ['#b3a582', '#b5a680', '#b09a6c', '#dfe6ee'][si];
+    g.beginPath(); g.roundRect(0, 0, P.w, P.h, 3); g.fill();
+    // a few spots where the grass has taken over
+    const clumps = [[0.2, 0.55, 11], [0.72, 0.35, 9], [0.5, 0.85, 8], [0.9, 0.8, 10], [0.08, 0.15, 7]]
+      .map(([fx, fy, r]) => [fx * P.w, fy * P.h, r]);
+    const grassy = (x, y) => clumps.some(([cx, cy, r]) => Math.hypot(x - cx, y - cy) < r);
+    const green = ['#86bb57', '#85b053', '#a6a356', '#eef3f8'][si];
+    for (const [cx, cy, r] of clumps) {
+      g.fillStyle = green;
+      g.beginPath(); g.ellipse(cx, cy, r * 1.15, r * 0.95, 0.3, 0, TAU); g.fill();
+    }
+    // rows of rounded cobbles inside a frame of long curb stones
+    const rowH = 10, m = 5;
+    let row = 0;
+    const gaps = [];
+    for (let y = m; y < P.h - m - 3; y += rowH, row++) {
+      let x = m + (row % 2 ? -4 : 0) + rnd() * 3;
+      while (x < P.w - m - 4) {
+        let w = 8 + rnd() * 7;
+        if (x + w > P.w - m) w = P.w - m - x;
+        const h = rowH - 1.5 - rnd() * 1.5;
+        const cx = x + w / 2, cy = y + rowH / 2;
+        if (w > 4 && x >= m - 1 && !grassy(cx, cy) && rnd() < 0.95) {
+          const tone = 128 + Math.floor(rnd() * 48), warm = Math.floor(rnd() * 16);
+          g.save();
+          g.translate(cx, cy + rnd() * 1.4 - 0.7);
+          g.rotate(rnd() * 0.16 - 0.08);
+          g.fillStyle = 'rgba(40,35,25,0.35)';                     // joint / shadow
+          g.beginPath(); g.roundRect(-w / 2 + 0.2, -h / 2 + 0.6, w - 0.4, h, 3.6); g.fill();
+          g.fillStyle = `rgb(${tone + warm},${tone + Math.floor(warm / 2)},${tone - 8})`;
+          g.beginPath(); g.roundRect(-w / 2 + 0.6, -h / 2, w - 1.2, h - 0.6, 3.4); g.fill();
+          g.fillStyle = 'rgba(255,255,255,0.2)';                    // light on top
+          g.beginPath(); g.roundRect(-w / 2 + 1.8, -h / 2 + 0.8, w - 4.2, h * 0.38, 2); g.fill();
+          g.restore();
+        } else gaps.push([cx, cy + 3]);
+        x += w + 0.8;
+      }
+    }
+    // curb: long stones along the border
+    const curb = (x, y, w, h) => {
+      const tone = 110 + Math.floor(rnd() * 25);
+      g.fillStyle = 'rgba(40,35,25,0.4)';
+      g.beginPath(); g.roundRect(x, y + 0.6, w, h, 1.6); g.fill();
+      g.fillStyle = `rgb(${tone + 6},${tone + 3},${tone - 4})`;
+      g.beginPath(); g.roundRect(x + 0.3, y, w - 0.6, h - 0.5, 1.6); g.fill();
+      g.fillStyle = 'rgba(255,255,255,0.16)';
+      g.fillRect(x + 1, y + 0.6, w - 2, 1.2);
+    };
+    for (const [y0, horiz] of [[0, true], [P.h - 4.5, true]]) {
+      if (!horiz) continue;
+      for (let x = 0; x < P.w - 1; ) { const w = Math.min(12 + rnd() * 8, P.w - x); curb(x, y0, w, 4.5); x += w + 0.6; }
+    }
+    for (const x0 of [0, P.w - 4.5]) {
+      for (let y = 4.5; y < P.h - 5; ) { const w = Math.min(10 + rnd() * 6, P.h - 4.5 - y); curb(x0, y, 4.5, w); y += w + 0.6; }
+    }
+    for (const [cx, cy, r] of clumps) {                        // grass in the green spots
+      for (let i = 0; i < r * 1.6; i++) tuft(cx + (rnd() - 0.5) * r * 1.6, cy + (rnd() - 0.5) * r * 1.4, 3, 3.5);
+      gaps.push([cx, cy]);
+    }
+    // grass in the gaps and a few blades in the joints
+    for (const [x, y] of gaps) tuft(x, y, winter ? 2 : 5, 4);
+    for (let i = 0; i < 70; i++) tuft(rnd() * P.w, rnd() * P.h, 2, 2.6);
+    if (winter) {
+      // snow: drifts at the edges and in the gaps, a dusting on the stones
+      for (let i = 0; i < 60; i++) {
+        const x = rnd() * P.w, y = rnd() * P.h;
+        const edge = Math.min(x, P.w - x, y, P.h - y);
+        g.fillStyle = `rgba(248,251,255,${edge < 10 ? 0.92 : 0.6})`;
+        g.beginPath(); g.ellipse(x, y, 4 + rnd() * 8, 2.5 + rnd() * 3.5, rnd() - 0.5, 0, TAU); g.fill();
+      }
+      for (const [x, y] of gaps) { g.fillStyle = 'rgba(248,251,255,0.9)'; g.beginPath(); g.ellipse(x, y - 3, 6, 4, 0, 0, TAU); g.fill(); }
+    } else {
+      // a few flowers (spring/summer) or dry seed heads (fall) where the grass grows
+      const cols = si === 2 ? ['#d9a03a', '#c4512a'] : ['#ffffff', '#ffe66d', '#ff9ecd'];
+      gaps.forEach(([x, y], i) => {
+        if (i % (si === 1 ? 3 : 2)) return;
+        g.fillStyle = cols[i % cols.length];
+        g.beginPath(); g.arc(x + rnd() * 4 - 2, y - 4, 1.3, 0, TAU); g.fill();
+      });
+    }
+    return c;
+  }
+  // Tractor tracks along the right wall of the stable (it was parked there): two tyre tracks with a
+  // chevron tread that come in from the meadow in a curve. Worn grass / mud, pressed snow in winter.
+  const TRACK = { x0: GATE.x0, y0: 0, x1: GATE.x1, y1: bowl.y - 8 };   // painted area
+  const trackTex = [];
+  function makeTracks(si) {
+    const k = 2, W = TRACK.x1 - TRACK.x0, H = TRACK.y1 - TRACK.y0;
+    const c = document.createElement('canvas');
+    c.width = W * k; c.height = H * k;
+    const g = c.getContext('2d');
+    g.scale(k, k);
+    g.translate(-TRACK.x0, -TRACK.y0);
+    let seed = 99;
+    const rnd = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
+    const winter = si === 3;
+    if (winter) {                                    // snow in the gate opening too
+      g.fillStyle = 'rgba(232,239,246,0.9)';
+      g.fillRect(GATE.x0, 0, W, 7);
+    }
+    const band = ['rgba(98,84,46,0.30)', 'rgba(104,88,48,0.30)', 'rgba(108,76,38,0.40)', 'rgba(150,168,192,0.55)'][si];
+    const tread = ['rgba(66,52,26,0.42)', 'rgba(70,55,28,0.42)', 'rgba(66,42,18,0.55)', 'rgba(104,124,152,0.65)'][si];
+    const half = 13, bw = 9, yEnd = TRACK.y1 - 6;    // half the distance between the wheels, tyre width
+    for (const side of [-1, 1]) {
+      const x = GATE.cx + side * half;
+      const line = (off, col, lw) => {
+        g.strokeStyle = col; g.lineWidth = lw;
+        g.beginPath(); g.moveTo(x + off, -2); g.lineTo(x + off, yEnd); g.stroke();
+      };
+      line(0, band, bw);
+      if (winter) { line(bw / 2 + 0.8, 'rgba(255,255,255,0.85)', 1.6); line(-bw / 2 - 0.8, 'rgba(255,255,255,0.85)', 1.6); }
+      else line(0, 'rgba(0,0,0,0.05)', bw - 4);
+      // chevron tread marks
+      g.strokeStyle = tread; g.lineWidth = 1.5; g.lineCap = 'round';
+      for (let y = 0; y < yEnd - 2; y += 4.5) {
+        const j = rnd() * 0.6;
+        for (const sgn of [-1, 1]) {
+          g.beginPath(); g.moveTo(x + sgn * 3.6, y - 2.6 - j); g.lineTo(x + sgn * 0.6, y); g.stroke();
+        }
+      }
+      g.lineCap = 'butt';
+    }
+    if (winter) {                                     // a bit of fresh snow blown over the tracks
+      for (let i = 0; i < 18; i++) {
+        g.fillStyle = 'rgba(248,251,255,0.6)';
+        g.beginPath(); g.ellipse(GATE.cx + (rnd() - 0.5) * 40, rnd() * yEnd, 3 + rnd() * 5, 1.5 + rnd() * 2, rnd(), 0, TAU); g.fill();
+      }
+    }
+    // the tracks end softly where the tractor stood, just before the bowl
+    g.globalCompositeOperation = 'destination-out';
+    const fade = g.createLinearGradient(0, yEnd - 14, 0, yEnd);
+    fade.addColorStop(0, 'rgba(0,0,0,0)'); fade.addColorStop(1, 'rgba(0,0,0,1)');
+    g.fillStyle = fade; g.fillRect(TRACK.x0, yEnd - 14, W, 20);
+    return c;
+  }
+
+  // The gate: two strong posts and a wooden gate. Closed, it fills the opening in the fence;
+  // on tractor days it swings open into the pasture and rests against the inside of the fence.
+  function drawGate() {
+    const winter = isWinter();
+    const open = state.screen === 'title' ? 0 : tractor.gate;
+    const e = open * open * (3 - 2 * open);                               // ease in/out
+    const th = Math.PI - e * (Math.PI - 0.07);                            // pointing left (closed) .. right (open)
+    const hx = GATE.x1, hy = 11, Lg = GATE.x1 - GATE.x0 - 6, gh = 9;
+    const c = Math.cos(th), sn = Math.sin(th);
+    const p0 = { x: hx + c * 3, y: hy + sn * 3 }, p1 = { x: hx + c * (3 + Lg), y: hy + sn * (3 + Lg) };
+    const at = (f, up) => ({ x: p0.x + (p1.x - p0.x) * f, y: p0.y + (p1.y - p0.y) * f - up });
+    ctx.strokeStyle = 'rgba(0,0,0,0.18)'; ctx.lineWidth = 3.5;            // shadow on the ground
+    ctx.beginPath(); ctx.moveTo(p0.x + 2, p0.y + 2); ctx.lineTo(p1.x + 2, p1.y + 2); ctx.stroke();
+    const bar = (a, b, w) => {
+      ctx.lineWidth = w + 1.4; ctx.strokeStyle = '#4a2c12';
+      ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+      ctx.lineWidth = w; ctx.strokeStyle = '#9a6633';
+      ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+    };
+    ctx.lineCap = 'butt';
+    bar(at(0, 1.5), at(1, 1.5), 2);                                       // bottom rail
+    bar(at(0, gh / 2 + 1), at(1, gh / 2 + 1), 1.6);                       // middle rail
+    bar(at(0.04, 1.5), at(0.96, gh - 0.5), 1.6);                          // diagonal brace
+    bar(at(0, gh), at(1, gh), 2);                                         // top rail
+    bar(at(0, 0), at(0, gh + 1), 2.4);                                    // hinge stile
+    bar(at(1, 0), at(1, gh + 1), 2.4);                                    // latch stile
+    if (winter) {
+      const a = at(0, gh + 1.6), b = at(1, gh + 1.6);
+      ctx.strokeStyle = '#f4f8fc'; ctx.lineWidth = 1.8;
+      ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+    }
+    for (const px of [GATE.x0, GATE.x1]) {                               // gate posts
+      ctx.fillStyle = 'rgba(0,0,0,0.25)'; ctx.fillRect(px - 2, 3, 8, 9);
+      ctx.fillStyle = '#5a361a'; ctx.fillRect(px - 4, 0, 8, 9);
+      ctx.fillStyle = '#7d4d26'; ctx.fillRect(px - 3, 1, 6, 2);
+      if (winter) { ctx.fillStyle = '#f4f8fc'; ctx.fillRect(px - 4, 0, 8, 2.5); }
+    }
+  }
+
+  // The tractor seen from above, front pointing down (towards the bowl)
+  function drawTractor() {
+    if (!tractorHere() && !tractor.puffs.length) return;
+    const x = GATE.cx, y = tractor.y;
+    ctx.save();
+    ctx.beginPath(); ctx.rect(0, 0, FW, FH); ctx.clip();               // it comes in from outside
+    if (tractorHere()) {
+      ctx.translate(x, y);
+      const rr = (x0, y0, w, h, r, col) => { ctx.fillStyle = col; ctx.beginPath(); ctx.roundRect(x0, y0, w, h, r); ctx.fill(); };
+      rr(-15, -28, 36, 64, 7, 'rgba(0,0,0,0.25)');                     // shadow
+      const roll = ((tractor.y % 3) + 3) % 3;                            // tread moves when it rolls
+      const wheel = (cx, cy, w, h) => {
+        rr(cx - w / 2, cy - h / 2, w, h, 2.5, '#1d1d1d');
+        ctx.strokeStyle = '#3d3d3d'; ctx.lineWidth = 1;
+        for (let k = -h / 2 + roll; k < h / 2; k += 3) {
+          ctx.beginPath(); ctx.moveTo(cx - w / 2 + 1, cy + k); ctx.lineTo(cx + w / 2 - 1, cy + k); ctx.stroke();
+        }
+      };
+      for (const sg of [-1, 1]) wheel(sg * 13.5, -15, 9, 24);          // big rear wheels
+      for (const sg of [-1, 1]) wheel(sg * 11, 19, 7, 13);             // small front wheels
+      rr(-11, 18, 22, 3, 1, '#333');                                    // front axle
+      rr(-7.5, -4, 15, 35, 4, '#b8231f');                               // engine hood
+      rr(-7.5, -4, 4, 35, 3, 'rgba(255,255,255,0.18)');                 // light on its left side
+      rr(-5.5, 28, 11, 3.5, 1, '#2a2a2a');                              // grille
+      rr(-7, 30, 3, 2, 0.8, '#fff3b0'); rr(4, 30, 3, 2, 0.8, '#fff3b0'); // headlights
+      for (const sg of [-1, 1]) {                                       // red mudguards over the rear wheels
+        rr(sg * 13.5 - 6, -27, 12, 19, 4, '#9e1d1a');
+        rr(sg * 13.5 - 5, -26, 10, 17, 3.5, '#c42a24');
+      }
+      rr(-12.5, -29, 25, 25, 3, '#2b2b2b');                             // cab
+      rr(-11.5, -28, 23, 23, 2.5, isWinter() ? '#f7fafd' : '#eef0f0');  // white roof
+      rr(-11.5, -28, 23, 7, 2.5, 'rgba(0,0,0,0.08)');
+      ctx.fillStyle = '#3a3a3a';                                        // exhaust pipe
+      ctx.beginPath(); ctx.arc(5, 2, 2, 0, TAU); ctx.fill();
+      ctx.fillStyle = '#111'; ctx.beginPath(); ctx.arc(5, 2, 1, 0, TAU); ctx.fill();
+      rr(-3, -34, 6, 5, 1, '#444');                                     // hitch at the back
+      ctx.setTransform(pxScale, 0, 0, pxScale, 0, HUD * pxScale);
+    }
+    for (const p of tractor.puffs) {                                    // exhaust
+      const f = p.t / p.life;
+      ctx.fillStyle = `rgba(110,110,110,${0.28 * (1 - f)})`;
+      ctx.beginPath(); ctx.arc(p.x, p.y, 1.5 + f * 4, 0, TAU); ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  // The farmer seen from above: straw hat, blue Swiss farmer's shirt, arms swinging
+  function drawFarmer() {
+    if (!farmerOut()) return;
+    const F = farmer;
+    ctx.save();
+    ctx.translate(F.x, F.y);
+    ctx.fillStyle = 'rgba(0,0,0,0.22)';
+    ctx.beginPath(); ctx.ellipse(2.5, 3, 10, 8, 0, 0, TAU); ctx.fill();
+    ctx.rotate(F.ang);
+    const sw = F.moving ? Math.sin(F.walkPh) : 0;
+    const sitting = F.mode === 'bench' && !F.moving;
+    const working = F.mode === 'work';
+    ctx.fillStyle = '#3b2a1a';                                        // boots (stretched out when sitting)
+    if (sitting) {
+      ctx.fillStyle = '#2c3a52';                                      // trousers
+      ctx.fillRect(2, -5, 8, 3.4); ctx.fillRect(2, 1.6, 8, 3.4);
+      ctx.fillStyle = '#3b2a1a';
+      ctx.beginPath(); ctx.ellipse(11, -3.3, 2.6, 2, 0, 0, TAU); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(11, 3.3, 2.6, 2, 0, 0, TAU); ctx.fill();
+    } else {
+      ctx.beginPath(); ctx.ellipse(sw * 4.5, -3.2, 3, 2, 0, 0, TAU); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(-sw * 4.5, 3.2, 3, 2, 0, 0, TAU); ctx.fill();
+    }
+    const petting = F.petT > 0;
+    const hand = (x, y) => {
+      ctx.strokeStyle = '#1f3c78'; ctx.lineWidth = 3.4; ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.moveTo(0, Math.sign(y) * 7); ctx.lineTo(x, y); ctx.stroke();
+      ctx.fillStyle = '#f0c9a0'; ctx.beginPath(); ctx.arc(x, y, 2, 0, TAU); ctx.fill();
+    };
+    if (working && !petting) {
+      // digging: the shovel goes into the ground, comes up, throws the earth to the side
+      const c = (F.workPh % 1.4) / 1.4, push = Math.sin(c * TAU);
+      const bx = 12 + push * 3, by = (c > 0.55 && c < 0.85 ? 6 : 0) + (dig.winter ? -1 : 0);
+      ctx.strokeStyle = '#8a5a2b'; ctx.lineWidth = 1.8; ctx.lineCap = 'round';   // handle
+      ctx.beginPath(); ctx.moveTo(-1, 5); ctx.lineTo(bx, by); ctx.stroke();
+      ctx.fillStyle = '#9aa2a8';                                                  // blade
+      ctx.save(); ctx.translate(bx, by); ctx.rotate(Math.atan2(by - 5, bx + 1));
+      ctx.beginPath(); ctx.roundRect(0, -2.6, 5, 5.2, 1.2); ctx.fill();
+      if (c > 0.4 && c < 0.75) { ctx.fillStyle = dig.winter ? '#ffffff' : '#7a5532'; ctx.beginPath(); ctx.arc(2.5, 0, 2, 0, TAU); ctx.fill(); }
+      ctx.restore();
+      hand(4 + push * 1.5, 6 + by * 0.3); hand(8 + push * 2.5, -3 + by * 0.5);
+    } else if (sitting && !petting) {
+      const sip = F.sipT < 1.1 && F.sipT > 0;                                     // bottle to the mouth
+      const bx = sip ? 4 : 8, by = sip ? -2 : -7;
+      hand(bx, by);
+      ctx.save(); ctx.translate(bx + (sip ? 1 : 1.5), by); ctx.rotate(sip ? -0.6 : 0.2);
+      ctx.fillStyle = '#5a3612'; ctx.beginPath(); ctx.roundRect(-1.6, -3.4, 3.2, 6, 1.2); ctx.fill();   // beer bottle
+      ctx.fillStyle = '#c9a03a'; ctx.fillRect(-1.2, -0.6, 2.4, 1.8);                                    // label
+      ctx.fillStyle = '#3a240c'; ctx.fillRect(-0.7, -5, 1.4, 1.8);                                      // neck
+      ctx.restore();
+      hand(5, 8);
+    } else {
+      if (petting) hand(10 + Math.sin(state.t * 10) * 1.5, -3);           // patting the dog
+      else hand(-sw * 4, -9);
+      hand(sw * 4, 9);
+    }
+    ctx.fillStyle = '#1f3c78';                                        // shoulders (blue shirt)
+    ctx.beginPath(); ctx.ellipse(0, 0, 5.5, 9, 0, 0, TAU); ctx.fill();
+    ctx.fillStyle = '#ffffff';                                        // edelweiss embroidery
+    for (const [ex, ey] of [[2.5, -4], [2.5, 4]]) { ctx.beginPath(); ctx.arc(ex, ey, 0.9, 0, TAU); ctx.fill(); }
+    ctx.fillStyle = '#e2c27a';                                        // straw hat
+    ctx.beginPath(); ctx.arc(0.5, 0, 7.2, 0, TAU); ctx.fill();
+    ctx.strokeStyle = '#b8964f'; ctx.lineWidth = 0.8; ctx.stroke();
+    ctx.strokeStyle = '#a5322a'; ctx.lineWidth = 1.2;                  // red hat band
+    ctx.beginPath(); ctx.arc(0.5, 0, 4.4, 0, TAU); ctx.stroke();
+    ctx.fillStyle = '#d4b264';
+    ctx.beginPath(); ctx.arc(0.5, 0, 3.7, 0, TAU); ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,0.25)';
+    ctx.beginPath(); ctx.arc(-0.5, -1.2, 2, 0, TAU); ctx.fill();
+    ctx.restore();
+  }
+
+  // The bench against the front wall (snow on it in winter)
+  function drawBench() {
+    const { x, y, w } = BENCH, winter = isWinter();
+    const rr = (x0, y0, ww, hh, r, col) => { ctx.fillStyle = col; ctx.beginPath(); ctx.roundRect(x0, y0, ww, hh, r); ctx.fill(); };
+    rr(x - w / 2 + 2, y - 2, w, 11, 2, 'rgba(0,0,0,0.22)');                  // shadow
+    rr(x - w / 2 + 1, y + 5, 3, 4, 1, '#4a2c12'); rr(x + w / 2 - 4, y + 5, 3, 4, 1, '#4a2c12');   // legs
+    rr(x - w / 2, y - 6, w, 3.5, 1.2, '#6e4320');                           // backrest against the wall
+    rr(x - w / 2, y - 2, w, 8, 1.5, '#8a5a2b');                             // seat: two planks
+    ctx.strokeStyle = '#5e3a1a'; ctx.lineWidth = 0.8;
+    ctx.beginPath(); ctx.moveTo(x - w / 2 + 1, y + 2); ctx.lineTo(x + w / 2 - 1, y + 2); ctx.stroke();
+    rr(x - w / 2, y - 2, w, 1.4, 1, 'rgba(255,255,255,0.15)');
+    if (winter) {
+      const busy = farmer.mode === 'bench' && farmerOut();
+      ctx.fillStyle = 'rgba(248,251,255,0.95)';
+      ctx.beginPath(); ctx.roundRect(x - w / 2 - 0.5, y - 6.8, w + 1, 2.2, 1); ctx.fill();
+      if (!busy) { ctx.beginPath(); ctx.roundRect(x - w / 2 + 0.5, y - 2.5, w - 1, 5, 2); ctx.fill(); }
+    }
+  }
+
+  // Today's dig site: a hole with a heap of earth, or (winter) a shovelled patch with a snow heap
+  function drawDigSite() {
+    if (!dig.on || dig.prog <= 0.01 || state.screen === 'title') return;
+    const { x, y, prog } = dig;
+    if (dig.winter) {
+      ctx.fillStyle = 'rgba(150,160,170,0.75)';                              // cleared stones
+      ctx.beginPath(); ctx.ellipse(x - 4, y, 6 + 12 * prog, 4 + 6 * prog, 0, 0, TAU); ctx.fill();
+      ctx.fillStyle = 'rgba(120,128,138,0.6)';
+      for (let i = 0; i < 6 * prog; i++) { ctx.beginPath(); ctx.ellipse(x - 12 + i * 4, y + ((i * 7) % 5) - 2, 1.8, 1.2, 0, 0, TAU); ctx.fill(); }
+      ctx.fillStyle = 'rgba(0,0,0,0.12)';                                    // snow heap and its shadow
+      ctx.beginPath(); ctx.ellipse(x + 16, y + 9, 5 + 6 * prog, 3 + 4 * prog, 0, 0, TAU); ctx.fill();
+      ctx.fillStyle = '#fbfdff';
+      ctx.beginPath(); ctx.ellipse(x + 15, y + 7, 4 + 6 * prog, 3 + 4 * prog, 0, 0, TAU); ctx.fill();
+      return;
+    }
+    ctx.fillStyle = '#4a3420';                                               // the hole
+    ctx.beginPath(); ctx.ellipse(x, y, 3 + 4 * prog, 2.5 + 3 * prog, 0, 0, TAU); ctx.fill();
+    ctx.fillStyle = '#2e2014';
+    ctx.beginPath(); ctx.ellipse(x + 0.5, y + 0.6, 1.5 + 3 * prog, 1.2 + 2.2 * prog, 0, 0, TAU); ctx.fill();
+    ctx.fillStyle = 'rgba(0,0,0,0.15)';                                      // heap of earth
+    ctx.beginPath(); ctx.ellipse(x + 4, y + 13, 3 + 6 * prog, 2.5 + 4 * prog, 0, 0, TAU); ctx.fill();
+    ctx.fillStyle = '#7a5532';
+    ctx.beginPath(); ctx.ellipse(x + 3, y + 11, 2.5 + 6 * prog, 2 + 4 * prog, 0, 0, TAU); ctx.fill();
+    ctx.fillStyle = '#93693f';
+    ctx.beginPath(); ctx.ellipse(x + 2, y + 10, 1.5 + 3.5 * prog, 1.2 + 2.2 * prog, 0, 0, TAU); ctx.fill();
+  }
+
+  function drawTracks() {
+    const si = seasonIndex();
+    if (!trackTex[si]) trackTex[si] = makeTracks(si);
+    ctx.drawImage(trackTex[si], TRACK.x0, TRACK.y0, TRACK.x1 - TRACK.x0, TRACK.y1 - TRACK.y0);
+  }
+
+  function drawPatio() {
+    const si = seasonIndex();
+    if (!patioTex[si]) patioTex[si] = makePatio(si);
+    ctx.drawImage(patioTex[si], P.x - 4, P.y - 4, P.w + 8, P.h + 8);
+  }
+
+  // Swiss flag (red square, white cross) waving on a pole
+  const flagTex = (() => {
+    const n = 40, c = document.createElement('canvas');
+    c.width = c.height = n;
+    const g = c.getContext('2d');
+    g.fillStyle = '#d52b1e'; g.fillRect(0, 0, n, n);
+    const arm = n * 6 / 32, len = n * 20 / 32;     // official proportions
+    g.fillStyle = '#ffffff';
+    g.fillRect((n - arm) / 2, (n - len) / 2, arm, len);
+    g.fillRect((n - len) / 2, (n - arm) / 2, len, arm);
+    return c;
+  })();
+  // The flag's wind: a steady breeze whose direction sways just a little
+  const flagWind = { base: rand(-0.35, 0.35) };
+  function flagWindNow() {
+    const t = state.t;
+    return { dir: flagWind.base + 0.18 * Math.sin(t * 0.11) + 0.08 * Math.sin(t * 0.37 + 1), str: 0.62 };
+  }
+
+  function drawFlag() {
+    const { x, y, h, size } = FLAG, top = y - h;
+    const winter = isWinter();
+    const { dir, str } = flagWindNow();
+    // which way the flag blows (seen from above at a slant), how far it stands out, how much it hangs
+    const gx = Math.cos(dir), gy = Math.sin(dir);
+    const ux = Math.sign(gx || 1) * Math.max(Math.abs(gx), 0.4), uy = gy * 0.45;   // never quite edge-on
+    const L = size * (0.45 + 0.55 * str), droop = (1 - str) * size * 0.6;
+    const amp = 0.4 + 1.4 * str, speed = 3 + 4 * str;
+    // shadows on the ground (the sun is up-left, like for the roof)
+    ctx.strokeStyle = 'rgba(0,0,0,0.2)'; ctx.lineWidth = 2.5; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + h * 0.42, y + h * 0.3); ctx.stroke();
+    ctx.fillStyle = 'rgba(0,0,0,0.13)';
+    const ax = x + h * 0.41, ay = y + h * 0.29, bx = x + h * 0.26, by = y + h * 0.19;
+    ctx.beginPath();
+    ctx.moveTo(ax, ay); ctx.lineTo(ax + gx * L, ay + gy * L * 0.8);
+    ctx.lineTo(bx + gx * L, by + gy * L * 0.8); ctx.lineTo(bx, by);
+    ctx.fill();
+    // stone base
+    ctx.fillStyle = winter ? '#eef3f8' : '#8d877b';
+    ctx.beginPath(); ctx.ellipse(x, y, 6, 3.5, 0, 0, TAU); ctx.fill();
+    ctx.strokeStyle = winter ? '#b8c6d4' : '#5f5a50'; ctx.lineWidth = 1; ctx.stroke();
+    const pole = () => {
+      ctx.lineCap = 'round';
+      ctx.strokeStyle = '#6d6d6d'; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, top); ctx.stroke();
+      ctx.strokeStyle = '#e3e3e3'; ctx.lineWidth = 1.2;
+      ctx.beginPath(); ctx.moveTo(x - 0.5, y - 1); ctx.lineTo(x - 0.5, top); ctx.stroke();
+      ctx.lineCap = 'butt';
+    };
+    // the flag, drawn in thin strips that wave
+    const flag = () => {
+      const n = 20, src = flagTex.width / n, sgn = ux >= 0 ? 1 : -1;
+      for (let i = 0; i < n; i++) {
+        const f0 = i / n, f1 = (i + 1) / n;
+        const ph = state.t * speed - i * 0.45;
+        const x0 = x + sgn * 1.5 + ux * L * f0, x1 = x + sgn * 1.5 + ux * L * f1;
+        const yy = top + 2 + uy * L * f0 + droop * Math.pow(f0, 1.6) + Math.sin(ph) * amp * f0;
+        const w = Math.max(0.8, Math.abs(x1 - x0) + 0.6), left = Math.min(x0, x1) - (x1 < x0 ? 0.6 : 0);
+        ctx.drawImage(flagTex, i * src, 0, src, flagTex.height, left, yy, w, size);
+        const fold = Math.cos(ph) * 0.2 * f0;                     // folds: lighter and darker strips
+        ctx.fillStyle = fold > 0 ? `rgba(255,255,255,${fold})` : `rgba(0,0,0,${-fold})`;
+        ctx.fillRect(left, yy, w, size);
+        const edgeOn = (1 - Math.abs(ux)) * 0.18;                  // seen edge-on: a bit darker
+        if (edgeOn > 0.01) { ctx.fillStyle = `rgba(0,0,0,${edgeOn})`; ctx.fillRect(left, yy, w, size); }
+      }
+    };
+    if (uy < 0) { flag(); pole(); } else { pole(); flag(); }   // blowing away from us: behind the pole
+    // golden knob on top (with a snow cap in winter)
+    ctx.fillStyle = '#e8c547';
+    ctx.beginPath(); ctx.arc(x, top - 1, 2.4, 0, TAU); ctx.fill();
+    if (winter) { ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.ellipse(x, top - 2.6, 2.6, 1.3, 0, 0, TAU); ctx.fill(); }
+  }
+
   function drawStable() {
     // straw floor
     ctx.fillStyle = '#d8b56a';
@@ -2462,6 +3309,66 @@
       ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
     }
     ctx.lineCap = 'butt';
+  }
+
+  // Snow on the roof (painted once): smooth slopes, faint ridges of the tile rows underneath,
+  // a soft rounded overhang at the eaves and a few icicles along the front.
+  let snowRoof = null;
+  function makeSnowRoof(x0, y0, w, h, ridge) {
+    const k = 2, c = document.createElement('canvas');
+    c.width = (w + 8) * k; c.height = (h + 12) * k;
+    const g = c.getContext('2d');
+    g.scale(k, k); g.translate(4 - x0, 4 - y0);
+    let seed = 777;
+    const rnd = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
+    // the two slopes: the upper one in the sun, the lower one a little blue in the shade
+    let gr = g.createLinearGradient(0, y0, 0, ridge);
+    gr.addColorStop(0, '#e9eff6'); gr.addColorStop(0.6, '#f7fafd'); gr.addColorStop(1, '#ffffff');
+    g.fillStyle = gr; g.fillRect(x0, y0, w, ridge - y0);
+    gr = g.createLinearGradient(0, ridge, 0, y0 + h);
+    gr.addColorStop(0, '#dfe7f0'); gr.addColorStop(1, '#cdd8e4');
+    g.fillStyle = gr; g.fillRect(x0, ridge, w, y0 + h - ridge);
+    // the tile rows show through as very soft ridges
+    for (let y = y0 + 9; y < y0 + h - 4; y += 9) {
+      if (Math.abs(y - ridge) < 6) continue;
+      g.strokeStyle = y < ridge ? 'rgba(150,170,195,0.13)' : 'rgba(120,140,170,0.14)';
+      g.lineWidth = 1.4;
+      g.beginPath();
+      for (let x = x0; x <= x0 + w; x += 6) {
+        const yy = y + Math.sin(x * 0.05 + y) * 0.6;
+        x === x0 ? g.moveTo(x, yy) : g.lineTo(x, yy);
+      }
+      g.stroke();
+      g.strokeStyle = 'rgba(255,255,255,0.35)'; g.lineWidth = 1;     // light on the upper side of each ridge
+      g.beginPath(); g.moveTo(x0, y - 1.2); g.lineTo(x0 + w, y - 1.2); g.stroke();
+    }
+    // snow piled a bit higher along the ridge
+    gr = g.createLinearGradient(0, ridge - 7, 0, ridge + 7);
+    gr.addColorStop(0, 'rgba(255,255,255,0)'); gr.addColorStop(0.45, 'rgba(255,255,255,0.9)');
+    gr.addColorStop(0.55, 'rgba(225,233,242,0.9)'); gr.addColorStop(1, 'rgba(225,233,242,0)');
+    g.fillStyle = gr; g.fillRect(x0, ridge - 7, w, 14);
+    // rounded overhang along the eaves (top and bottom edge), with a soft shadow under the front one
+    const eave = (y, dir) => {
+      g.beginPath();
+      g.moveTo(x0 - 1, y - dir * 4);
+      for (let x = x0 - 1; x <= x0 + w + 1; x += 3) g.lineTo(x, y + dir * (2.2 + 1.2 * Math.sin(x * 0.11) + 0.6 * Math.sin(x * 0.37)));
+      g.lineTo(x0 + w + 1, y - dir * 4);
+      g.closePath();
+    };
+    g.save(); g.translate(1.5, 2.5); eave(y0 + h, 1); g.fillStyle = 'rgba(40,60,90,0.18)'; g.fill(); g.restore();
+    eave(y0 + h, 1); g.fillStyle = '#d3dde8'; g.fill();
+    eave(y0, -1); g.fillStyle = '#f4f8fc'; g.fill();
+    // side edges: a thin rounded rim
+    g.fillStyle = 'rgba(255,255,255,0.7)';
+    g.fillRect(x0 - 1, y0, 2, h); g.fillRect(x0 + w - 1, y0, 2, h);
+    // icicles hanging from the front eave
+    for (let x = x0 + 6; x < x0 + w - 4; x += 7 + rnd() * 9) {
+      const L = 2 + rnd() * 5, yb = y0 + h + 2.5 + Math.sin(x * 0.11) * 1.2;
+      g.fillStyle = 'rgba(210,232,248,0.9)';
+      g.beginPath(); g.moveTo(x - 1.1, yb); g.lineTo(x + 1.1, yb); g.lineTo(x, yb + L); g.closePath(); g.fill();
+      g.fillStyle = 'rgba(255,255,255,0.8)'; g.fillRect(x - 0.4, yb, 0.6, L * 0.6);
+    }
+    return c;
   }
 
   // Gable roof seen from above (ridge along the long side). It turns see-through
@@ -2491,24 +3398,19 @@
     }
     ctx.fillStyle = 'rgba(255,200,170,0.12)';                    // light on the upper slope
     ctx.fillRect(x0, y0, w, (ridge - y0) * 0.5);
-    if (si === 3) {                                               // snow
-      ctx.fillStyle = 'rgba(244,248,252,0.93)';
-      ctx.fillRect(x0, y0, w, h);
-      ctx.fillStyle = 'rgba(150,165,190,0.28)';                   // shady slope
-      ctx.fillRect(x0, ridge, w, y0 + h - ridge);
-      ctx.fillStyle = 'rgba(255,255,255,0.7)';                    // soft snow bumps
-      for (let i = 0; i < 12; i++) {
-        ctx.beginPath();
-        ctx.ellipse(x0 + 14 + ((i * 41) % (w - 28)), y0 + 12 + ((i * 29) % (h - 24)), 14, 5, 0, 0, TAU);
-        ctx.fill();
-      }
-      ctx.fillStyle = 'rgba(160,60,40,0.55)';
-      for (let i = 0; i < 9; i++) ctx.fillRect(x0 + ((i * 53) % (w - 16)) + 4, (i % 2 ? y0 + h - 7 : y0 + 2), 12, 5);
+    if (si === 3) {                                               // a smooth blanket of snow
+      if (!snowRoof) snowRoof = makeSnowRoof(x0, y0, w, h, ridge);
+      ctx.drawImage(snowRoof, x0 - 4, y0 - 4, w + 8, h + 12);
       ctx.strokeStyle = 'rgba(170,190,210,0.6)';
     } else ctx.strokeStyle = '#4f1d12';
     // ridge cap and outline
-    ctx.fillStyle = si === 3 ? '#c9d4e2' : '#5a2318';
-    ctx.fillRect(x0, ridge - 3, w, 6);
+    if (si === 3) {                                               // snowed-over ridge: just a soft crest
+      ctx.fillStyle = 'rgba(255,255,255,0.85)'; ctx.fillRect(x0, ridge - 2.5, w, 3);
+      ctx.fillStyle = 'rgba(160,178,200,0.35)'; ctx.fillRect(x0, ridge + 0.5, w, 1.6);
+    } else {
+      ctx.fillStyle = '#5a2318';
+      ctx.fillRect(x0, ridge - 3, w, 6);
+    }
     ctx.lineWidth = 2;
     ctx.strokeRect(x0 + 1, y0 + 1, w - 2, h - 2);
     if (si === 2) {                                               // a few leaves on the roof
@@ -2637,13 +3539,14 @@
     const wool = hurt ? '#ff9c8f' : male ? '#b9bdc2' : '#fbfaf5';
     const edge = hurt ? '#c0392b' : male ? '#7d8288' : '#b8b2a6';
     const face = male ? '#cdbfae' : '#efe3d2';
-    const r = s.r;
+    const r = CFG.sheep.r;   // drawn at adult size, then scaled (lambs are smaller)
     const puffs = s.puffs || [1, 1, 1, 1, 1, 1, 1, 1, 1];
     const n = puffs.length;
 
     ctx.save();
     ctx.translate(s.x, s.y);
     ctx.rotate(Math.atan2(s.fy, s.fx));
+    if (s.r !== CFG.sheep.r) ctx.scale(s.r / CFG.sheep.r, s.r / CFG.sheep.r);
 
     // wool: outline pass, then fill pass
     const puff = (grow, color) => {
@@ -2885,8 +3788,8 @@
     } else if (tr && tr.type === 'chase') {
       drawDogCurled();
     } else {
-      const fast = dog.moving || dog.eating;
-      const wag = Math.sin(state.t * (fast ? 16 : 5)) * (fast ? 0.5 : 0.25);
+      const fast = dog.moving || dog.eating || dog.happyT > 0;
+      const wag = Math.sin(state.t * (dog.happyT > 0 ? 24 : fast ? 16 : 5)) * (dog.happyT > 0 ? 0.65 : fast ? 0.5 : 0.25);
       drawDogBack(wag);
     }
     ctx.restore();
@@ -3141,6 +4044,116 @@
     ctx.globalAlpha = 1;
   }
 
+  // Season symbols for the top bar: flower, sun over grass, brown leaf, snowflake
+  function drawSeasonIcon(x, y, si) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.lineCap = 'round';
+    if (si === 0) {                                       // spring: a flower
+      ctx.strokeStyle = '#5fae4e'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(0, 2); ctx.quadraticCurveTo(1, 7, -1, 11); ctx.stroke();
+      ctx.fillStyle = '#ffb3d1';
+      for (let i = 0; i < 5; i++) {
+        const a = -Math.PI / 2 + i * TAU / 5;
+        ctx.beginPath(); ctx.ellipse(Math.cos(a) * 4.6, -3 + Math.sin(a) * 4.6, 3.6, 2.6, a, 0, TAU); ctx.fill();
+      }
+      ctx.fillStyle = '#ffd84d'; ctx.beginPath(); ctx.arc(0, -3, 2.6, 0, TAU); ctx.fill();
+    } else if (si === 1) {                                // summer: sun over grass
+      ctx.strokeStyle = '#ffd34d'; ctx.lineWidth = 1.6;
+      for (let i = 0; i < 8; i++) {
+        const a = i * TAU / 8;
+        ctx.beginPath(); ctx.moveTo(3 + Math.cos(a) * 6.5, -4 + Math.sin(a) * 6.5); ctx.lineTo(3 + Math.cos(a) * 9, -4 + Math.sin(a) * 9); ctx.stroke();
+      }
+      ctx.fillStyle = '#ffd34d'; ctx.beginPath(); ctx.arc(3, -4, 5, 0, TAU); ctx.fill();
+      ctx.strokeStyle = '#6cc04a'; ctx.lineWidth = 2;
+      for (const [bx, h, lean] of [[-9, 9, -2], [-5, 12, 1], [-1, 8, 2], [3, 11, -1], [7, 9, 2], [10, 7, 1]]) {
+        ctx.beginPath(); ctx.moveTo(bx, 11); ctx.quadraticCurveTo(bx + lean * 0.3, 11 - h * 0.6, bx + lean, 11 - h); ctx.stroke();
+      }
+    } else if (si === 2) {                                // fall: a brown leaf
+      ctx.rotate(-0.6);
+      ctx.fillStyle = '#b8642a';
+      ctx.beginPath(); ctx.moveTo(0, -10); ctx.quadraticCurveTo(9, -3, 0, 8); ctx.quadraticCurveTo(-9, -3, 0, -10); ctx.fill();
+      ctx.strokeStyle = '#7a3a14'; ctx.lineWidth = 1.2;
+      ctx.beginPath(); ctx.moveTo(0, -8); ctx.lineTo(0, 11); ctx.stroke();
+      ctx.lineWidth = 0.9;
+      for (const k of [-4, 0, 4]) {
+        ctx.beginPath(); ctx.moveTo(0, k); ctx.lineTo(4, k - 3.5); ctx.moveTo(0, k); ctx.lineTo(-4, k - 3.5); ctx.stroke();
+      }
+    } else {                                              // winter: a snowflake
+      ctx.strokeStyle = '#bfe3ff'; ctx.lineWidth = 1.8;
+      for (let i = 0; i < 6; i++) {
+        ctx.save(); ctx.rotate(i * TAU / 6);
+        ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(0, -10);
+        ctx.moveTo(0, -5.5); ctx.lineTo(-3, -8.5); ctx.moveTo(0, -5.5); ctx.lineTo(3, -8.5);
+        ctx.stroke();
+        ctx.restore();
+      }
+      ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(0, 0, 1.6, 0, TAU); ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  // Little golden trophy for the top bar (largest flock so far)
+  function drawHudTrophy(x, y) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.strokeStyle = '#e0a43a'; ctx.lineWidth = 1.8;                  // handles
+    for (const sg of [-1, 1]) { ctx.beginPath(); ctx.arc(sg * 6.5, -4.5, 3.4, sg > 0 ? -1.6 : 1.6 - Math.PI, sg > 0 ? 1.3 : Math.PI - 1.3 + Math.PI); ctx.stroke(); }
+    ctx.fillStyle = '#f4c542';                                         // cup
+    ctx.beginPath(); ctx.moveTo(-7, -9); ctx.lineTo(7, -9); ctx.quadraticCurveTo(7, 1, 0, 2.5); ctx.quadraticCurveTo(-7, 1, -7, -9); ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,0.45)';                          // shine
+    ctx.beginPath(); ctx.ellipse(-3, -5, 1.4, 3, 0.2, 0, TAU); ctx.fill();
+    ctx.fillStyle = '#d9a12e';                                         // stem and base
+    ctx.fillRect(-1.3, 2, 2.6, 4);
+    ctx.fillRect(-5, 6, 10, 3);
+    ctx.fillStyle = '#8a5a2b'; ctx.fillRect(-6, 8.5, 12, 2);
+    ctx.restore();
+  }
+
+  // Little stable for the top bar: red barn front with a white-framed door
+  function drawHudStable(x, y) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.scale(1.25, 1.25);
+    ctx.fillStyle = '#5a2318';                                         // roof
+    ctx.beginPath(); ctx.moveTo(-11, -1); ctx.lineTo(0, -10); ctx.lineTo(11, -1); ctx.lineTo(9, 0); ctx.lineTo(0, -7.5); ctx.lineTo(-9, 0); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#b8402a';                                         // walls
+    ctx.beginPath(); ctx.moveTo(-8.5, -0.5); ctx.lineTo(0, -7.2); ctx.lineTo(8.5, -0.5); ctx.lineTo(8.5, 9); ctx.lineTo(-8.5, 9); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#f3e4bf';                                         // door frame
+    ctx.fillRect(-4, 1.5, 8, 7.5);
+    ctx.fillStyle = '#7a2a1a';
+    ctx.fillRect(-3, 2.5, 6, 6.5);
+    ctx.strokeStyle = '#f3e4bf'; ctx.lineWidth = 0.9;                   // the X on the door
+    ctx.beginPath(); ctx.moveTo(-3, 2.5); ctx.lineTo(3, 9); ctx.moveTo(3, 2.5); ctx.lineTo(-3, 9); ctx.stroke();
+    ctx.fillStyle = '#f3e4bf';                                         // hay-loft window
+    ctx.fillRect(-1.5, -4, 3, 2.5);
+    if (isWinter()) {                                                  // snow on the roof
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath(); ctx.moveTo(-11, -1); ctx.lineTo(0, -10.5); ctx.lineTo(11, -1); ctx.lineTo(9.5, -0.2); ctx.lineTo(0, -8.4); ctx.lineTo(-9.5, -0.2); ctx.closePath(); ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  // Little sheep for the top bar (grey ram with horns / white ewe)
+  function drawHudSheep(x, y, male) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.scale(1.2, 1.2);
+    ctx.fillStyle = male ? '#7d8288' : '#b8b2a6';
+    for (const [px, py] of [[-3, -3], [1, -4], [-4, 1], [0, 1], [-2, 4], [2, 3]]) { ctx.beginPath(); ctx.arc(px, py, 4.2, 0, TAU); ctx.fill(); }
+    ctx.fillStyle = male ? '#b9bdc2' : '#fbfaf5';
+    for (const [px, py] of [[-3, -3], [1, -4], [-4, 1], [0, 1], [-2, 4], [2, 3]]) { ctx.beginPath(); ctx.arc(px, py, 3.4, 0, TAU); ctx.fill(); }
+    ctx.fillStyle = male ? '#cdbfae' : '#efe3d2';
+    ctx.beginPath(); ctx.ellipse(6.5, 0, 3.6, 3, 0, 0, TAU); ctx.fill();
+    if (male) {
+      ctx.strokeStyle = '#b8955a'; ctx.lineWidth = 1.5;
+      for (const sg of [-1, 1]) { ctx.beginPath(); ctx.arc(5.5, sg * 3, 2, sg > 0 ? -0.6 : -2.6, sg > 0 ? 2.6 : 0.6); ctx.stroke(); }
+    }
+    ctx.fillStyle = '#111';
+    for (const sg of [-1, 1]) { ctx.beginPath(); ctx.arc(8, sg * 1.3, 0.8, 0, TAU); ctx.fill(); }
+    ctx.restore();
+  }
+
   function drawSkyIcon(ix, cy, hour) {
     const se = season();
     const morning = hour >= se.morning[0] && hour < se.morning[1];
@@ -3191,22 +4204,25 @@
     const hour = state.screen === 'title' ? 12 : currentHour();
     const dark = darkness(hour);
 
+    // the day, then the season symbol
     ctx.font = '700 17px system-ui, sans-serif';
     ctx.textBaseline = 'middle';
     ctx.textAlign = 'left';
     ctx.fillStyle = '#f1efe2';
-    ctx.fillText(tr('day', state.day), 16, cy);
+    const dayText = tr('day', state.day);
+    ctx.fillText(dayText, 16, cy);
+    drawSeasonIcon(116, cy, seasonIndex());                   // right next to the sun / moon
 
     // sun / rising or setting sun / moon
-    drawSkyIcon(100, cy, hour);
+    drawSkyIcon(142, cy, hour);
 
     const h = Math.floor(hour) % 24, mi = Math.floor((hour % 1) * 60);
     ctx.font = '600 17px ui-monospace, Menlo, monospace';
     ctx.fillStyle = '#f1efe2';
-    ctx.fillText(`${String(h).padStart(2, '0')}:${String(mi).padStart(2, '0')}`, 118, cy);
+    ctx.fillText(`${String(h).padStart(2, '0')}:${String(mi).padStart(2, '0')}`, 160, cy);
 
     // time-of-day bar
-    const bx = 186, bw = 200, by = cy - 5, bh = 10;
+    const bx = 228, bw = 210, by = cy - 5, bh = 10;
     const se = season();
     const span = CLOCK.end - CLOCK.start;
     const hx = (h) => bx + ((h - CLOCK.start) / span) * bw;
@@ -3222,33 +4238,52 @@
     const mx = hx(clamp(hour, CLOCK.start, CLOCK.end));
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(mx - 1.5, by - 5, 3, bh + 10);
-    // season
-    ctx.font = '700 15px system-ui, sans-serif';
-    ctx.textAlign = 'left';
-    ctx.fillStyle = se.color;
-    ctx.fillText(seasonName(), bx + bw + 14, cy);
-
-
-    // flock info (right aligned, drawn as segments)
+    // flock info, right to left: best, in stable, ewes, rams
     const safe = sheep.length - unsafeSheep().length;
     const H = tr('hud');
-    const segs = [
-      { text: `${H.best} ${state.best}`, color: '#f1efe2' },
-      { text: `${H.inStable} ${safe}/${sheep.length}`, color: '#f1efe2' },
-      { text: `${H.fed} ${fedCount('f')}/${countSex('f')}`, color: '#bfe6a6' },
-      { text: `${H.ewes} ${countSex('f')}`, color: '#ffffff' },
-      { text: `${H.fed} ${fedCount('m')}/${countSex('m')}`, color: '#bfe6a6' },
-      { text: `${H.rams} ${countSex('m')}`, color: '#c4c9cf' },
-    ];
-    ctx.font = '600 14px system-ui, sans-serif';
-    ctx.textAlign = 'right';
-    let x = CW - 72;
-    segs.forEach((sg, i) => {
-      ctx.fillStyle = sg.color;
-      ctx.fillText(sg.text, x, cy);
-      const gap = i === 2 || i === 4 ? 6 : 22;
-      x -= ctx.measureText(sg.text).width + gap;
-    });
+    ctx.textAlign = 'left';
+    let x = CW - 76;
+    const one = (text, color) => {                        // a single line
+      ctx.font = '600 14px system-ui, sans-serif';
+      const w = ctx.measureText(text).width;
+      ctx.fillStyle = color; ctx.fillText(text, x - w, cy);
+      x -= w + 24;
+    };
+    const two = (male) => {                               // sheep icon, count, and how many are fed below
+      const n = countSex(male ? 'm' : 'f'), fed = fedCount(male ? 'm' : 'f');
+      const main = `${male ? H.rams : H.ewes} ${n}`, sub = `${H.fed} ${fed}/${n}`;
+      ctx.font = '600 14px system-ui, sans-serif';
+      const w1 = ctx.measureText(main).width;
+      ctx.font = '600 11px system-ui, sans-serif';
+      const w = Math.max(w1, ctx.measureText(sub).width), left = x - w;
+      ctx.fillStyle = n > 0 && fed === n ? '#9fe08a' : fed > 0 ? '#e8e04a' : '#8f9a8c';
+      ctx.fillText(sub, left, cy + 9);
+      ctx.font = '600 14px system-ui, sans-serif';
+      ctx.fillStyle = male ? '#c9ced4' : '#ffffff';
+      ctx.fillText(main, left, cy - 7);
+      drawHudSheep(left - 16, cy, male);
+      x = left - 16 - 10 - 22;
+    };
+    {                                                     // trophy + largest flock so far
+      const text = `${state.best}`;
+      ctx.font = '600 14px system-ui, sans-serif';
+      const w = ctx.measureText(text).width;
+      ctx.fillStyle = '#ffd86b';
+      ctx.fillText(text, x - w, cy);
+      drawHudTrophy(x - w - 14, cy);
+      x -= w + 14 + 12 + 24;
+    }
+    {                                                     // stable symbol + how many are inside
+      const text = `${safe}/${sheep.length}`;
+      ctx.font = '600 14px system-ui, sans-serif';
+      const w = ctx.measureText(text).width;
+      ctx.fillStyle = safe === sheep.length && sheep.length ? '#9fe08a' : '#f1efe2';
+      ctx.fillText(text, x - w, cy);
+      drawHudStable(x - w - 18, cy);
+      x -= w + 18 + 13 + 24;
+    }
+    two(false);
+    two(true);
     if (state.screen === 'play') drawButton(uiRects().exit, tr('exit'), 8, COL.red);
   }
 
@@ -3279,6 +4314,11 @@
     ctx.setTransform(pxScale, 0, 0, pxScale, 0, HUD * pxScale);
     ctx.drawImage(grass, 0, 0);
     ctx.drawImage(seasonLayer, 0, 0);
+    drawTracks();
+    drawGate();
+    drawPatio();
+    drawDigSite();
+    drawBench();
     drawGroundLeaves();
     drawPatches();
     drawPrints();
@@ -3292,8 +4332,11 @@
     const dark = state.screen === 'title' ? (isWinter() ? CFG.winter.gloom : 0) : darkness(currentHour());
     nightLevel = state.screen === 'title' ? 0 : clamp(rawDarkness(currentHour()) / 0.65, 0, 1);
     drawEntities(dark);
+    drawTractor();
+    drawFarmer();
     drawRoof();
     drawLamps(false);
+    drawFlag();
     drawCanopies();
     drawBees(dark);
     drawWeather();
@@ -3962,6 +5005,7 @@
 
   // Handy for debugging in the browser console
   window.weide = {
+    flagWind, tractor, planTractor, farmer, dig,
     state, SEASONS, CLOCK, CFG,
     get sheep() { return sheep; }, get wolves() { return wolves; },
     get dog() { return dog; }, get patches() { return patches; }, mouse, bowl,

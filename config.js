@@ -31,8 +31,12 @@ window.WEIDE = (() => {
       recoverMin: 5,         // health gain (%) over night if fully fed
       recoverMax: 25,
       grassAttract: 50,      // calm sheep this close to a grass patch walk onto it and stay
+      grassSeek: 300,        // by day, hungry calm sheep slowly walk to grass this close (not across streams)
       coldNight: 5,          // health % lost by a sheep that stays outside the whole night
-      homeRadius: 110,       // evening/night: sheep this close to the door walk in by themselves
+      parkRadius: 130,       // fully fed sheep this close to the stable wait there (and go in at evening)
+      lambSize: 0.5,         // newborn lambs are half the size of a grown sheep (for their first day)
+      lambFood: 0.75,        // ... and need only 75% of an adult's food to be full
+      matureNights: 2,       // a lamb can have lambs itself from its 2nd night on (small 1st day, grown 2nd day)
     },
     wolf:  { r: 12, speed: 125, fleeSpeed: 165, fearRadius: 150, courage: 4, eatTime: 2.5,
              attackRange: 100,  // a wolf this close to the dog may turn on it ...
@@ -47,16 +51,29 @@ window.WEIDE = (() => {
                cutOff: [0.15, 0.25],  // share of the pasture behind the streams (all streams together)
                sheepSpeed: 0.35, dogSpeed: 0.6, wolfSpeed: 0.6,   // speed while wading through the water
                patchAcross: 0.6 },   // chance that a grass patch grows on the far side of a stream
+    // the farmer's tractor: on some days the gate opens and it parks along the stable
+    tractor: { daysPerSeason: 1,  // tractor days per season (0 = never)
+               arrive: 6.5,       // clock hour it drives in
+               leaveEarly: 1.5,   // leaves this many hours before evening starts
+               speed: 40,         // driving speed (backs out slower)
+               scareRadius: 60,   // a moving tractor scares sheep this close
+               wolfFear: 110 },   // wolves keep this far away from the tractor
+    // the farmer who comes with the tractor
+    farmer: { speed: 35,          // walking speed
+              sheepRadius: 50,    // sheep make way for him
+              wolfFear: 120,      // wolves keep this far away from him
+              petRadius: 32,      // the dog this close gets a pat (and wags its tail)
+              walkBack: 1 },      // starts walking back to the tractor this many hours before it leaves
     fastForward: 4,          // speed multiplier while 'F' is on (daytime only)
     grass: { surplus: 1.3, minPatches: 3, maxPatches: 6, winterFactor: 0.85 }, // food in winter (0.85 = 15% less)
     summer: { dogDrain: 1.15 },                   // hot: the dog tires 15% faster
     winter: { dayDrain: 0.08, eveningDrain: 1.0, nightDrain: 1.5, // health % per second for sheep outside
-              gloom: 0.2,    // winter days are never fully bright
-              snowDark: [0, 0.07, 0.14, 0.22],  // extra darkness while it snows (none / light / moderate / heavy)
+              gloom: 0.3,    // winter days are never fully bright
+              snowDark: [0, 0.17, 0.24, 0.5],  // extra darkness while it snows (none / light / moderate / heavy)
               sheepSlow: [0.85, 0.9],    // sheep move 10-15% slower in winter (random per sheep)
               // snowfall, picked at random every winter day: none / light / moderate / heavy
               snowChance: [0.3, 0.35, 0.25, 0.1],   // chance of each kind of day
-              snowFlakes: [0, 45, 110, 230] },      // number of snowflakes for each kind
+              snowFlakes: [0, 45, 150, 300] },      // number of snowflakes for each kind
   };
 
   // Seasons change every 3 days. All times are clock hours.

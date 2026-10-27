@@ -169,9 +169,15 @@
         <li>Sheep walk away from the dog when it is within <b>{{CFG.sheep.dogRadius}} px</b>. The closer the dog, the faster they go (top speed {{CFG.sheep.maxSpeed}}, slower than a wolf). That's how you herd.</li>
         <li>The stable wall blocks the dog: a sheep inside ignores a dog outside, and the other way round.</li>
         <li>On their own, sheep roam, pause, sometimes trot off, and loosely keep together.</li>
+        <li>During the day, a hungry calm sheep slowly <b>walks towards grass</b> it can find within <b>{{CFG.sheep.grassSeek}} px</b>
+          (taking breaks on the way). It doesn't wade through a stream for it; frozen streams in winter are fine.</li>
         <li>A calm sheep within <b>{{CFG.sheep.grassAttract}} px</b> of grass walks onto it and stays there.</li>
         <li>During the <b>day</b>, sheep in the stable walk back out by themselves.</li>
-        <li>In the <b>evening and at night</b>, sheep within <b>{{CFG.sheep.homeRadius}} px</b> of the door walk in by themselves.</li>
+        <li>In the <b>evening and at night</b>, every <b>fully fed</b> sheep walks back to the stable by itself at its normal pace,
+          from anywhere on the pasture (over a bridge if it is across a stream). Hungry sheep keep eating or stroll around:
+          the dog has to bring them in. Once a hungry sheep stands on the <b>cobblestone patio</b> in front of the door, it walks in by itself.</li>
+        <li><b>Parking</b>: during the day, a fully fed sheep within <b>{{CFG.sheep.parkRadius}} px</b> of the stable stays there and waits
+          (it doesn't go in). In the evening it walks in by itself.</li>
         <li>When a wolf is close they <b>panic</b> and scatter in random directions.</li>
       </ul>
       <h3>FOOD &amp; HEALTH</h3>
@@ -185,8 +191,12 @@
       </ul>
       <h3>LAMBS</h3>
       <ul>
-        <li>At midnight every <b>pair of a fully fed ram and a fully fed ewe</b> gets one lamb. For example 2 rams + 2 ewes = 2 lambs, 3 rams + 1 ewe = 1 lamb.</li>
+        <li>At midnight every <b>pair of a fully fed ram and a fully fed ewe in the stable</b> gets one lamb. Sheep that spend the night outside don't count. For example 2 rams + 2 ewes = 2 lambs, 3 rams + 1 ewe = 1 lamb.</li>
         <li>Lambs are randomly male or female.</li>
+        <li>A newborn lamb is <b>{{pct:CFG.sheep.lambSize}}% of the size</b> of a grown sheep and needs only <b>{{pct:CFG.sheep.lambFood}}% of the food</b>
+          to be full (so it fills up faster and eats less grass). The next morning it is fully grown.</li>
+        <li>Growing up: born &rarr; small for 1 day &rarr; grown up for 1 day &rarr; can have lambs from its
+          <b>night {{CFG.sheep.matureNights}}</b> on (fed and in the stable, like everyone else).</li>
       </ul>
     </div>
   </section>
@@ -209,7 +219,7 @@
     <div class="inner">
       <h3>HOW MANY</h3>
       <ul>
-        <li><b>Night pack</b> = (sheep ÷ 2, rounded down, + 1) × (1 + wolf setting), then randomly ±{{pct:CFG.pack.randomness}}%, at least 1. They arrive a few seconds apart.</li>
+        <li><b>Night pack</b> = (sheep ÷ 2, rounded down) × (1 + wolf setting), then randomly ±{{pct:CFG.pack.randomness}}%, at least 1. They arrive a few seconds apart.</li>
         <li><b>Day attacks</b> start on day 2: 35% chance on day 2, +10% per day, up to 90%. A day pack is about {{pct:CFG.pack.dayFraction}}% of the night pack.</li>
       </ul>
       <h3>BEHAVIOUR</h3>
@@ -239,6 +249,20 @@
         <li><b>Trees</b> ({{range:CFG.obstacles.trees}}), <b>rocks</b> ({{range:CFG.obstacles.rocks}}) and <b>lakes</b> ({{range:CFG.obstacles.lakes}}) are placed randomly every new game. Trunks, rocks and lakes block everyone. The dog and wolves steer around them; sheep just slide along.</li>
         <li><b>The stable</b> has a roof. It turns see-through while sheep (or the dog) are inside. Two lamps next to the door switch on when it gets dark.</li>
         <li><b>Ducks</b> and <b>bees</b> (spring and summer, around the trees) are just for fun. In fall the wind blows the fallen leaves around.</li>
+        <li><b>The farmer's tractor</b>: on {{CFG.tractor.daysPerSeason}} day(s) per season the gate in the top fence opens at
+          <b>{{hour:CFG.tractor.arrive}}</b>, and the tractor drives in and parks on its tracks next to the stable. It backs out
+          {{CFG.tractor.leaveEarly}} hours before evening and the gate closes again.
+          <ul>
+            <li>It is solid: nobody can walk through it.</li>
+            <li>It honks at animals in its way and waits until they move. Sheep within {{CFG.tractor.scareRadius}} px of a moving tractor step aside.</li>
+            <li><b>Wolves keep {{CFG.tractor.wolfFear}} px away</b> from it, so the spot next to the tractor (and the dog's bowl) is safe that day.</li>
+            <li>The gate is open, but the sheep can't leave the pasture.</li>
+            <li><b>The farmer</b> gets off and walks over the patio into the stable. After a while he comes out and <b>digs</b> a hole
+              in front of the stable, then sits on the <b>bench</b> next to the patio with a beer. About {{CFG.farmer.walkBack}} hour before
+              the tractor leaves he walks back and drives off. In <b>winter</b> it's too cold for that: he only pops out to shovel
+              some snow off the patio and then goes back inside (you'll see his boot prints in the snow). Sheep within {{CFG.farmer.sheepRadius}} px make way for him, and <b>wolves keep {{CFG.farmer.wolfFear}} px away</b>.
+              When the dog comes within {{CFG.farmer.petRadius}} px, it wags its tail and gets a pat.</li>
+          </ul></li>
       </ul>
     </div>
   </section>
@@ -296,8 +320,12 @@
         <tr><td><code>hungerMin</code> / <code>hungerMax</code></td><td>{{CFG.sheep.hungerMin}} / {{CFG.sheep.hungerMax}}</td><td>Health % lost at midnight if not fully fed</td></tr>
         <tr><td><code>recoverMin</code> / <code>recoverMax</code></td><td>{{CFG.sheep.recoverMin}} / {{CFG.sheep.recoverMax}}</td><td>Health % gained at midnight if fully fed</td></tr>
         <tr><td><code>grassAttract</code></td><td>{{CFG.sheep.grassAttract}}</td><td>Calm sheep this close to grass walk onto it</td></tr>
+        <tr><td><code>grassSeek</code></td><td>{{CFG.sheep.grassSeek}}</td><td>By day, hungry sheep slowly walk to grass this close</td></tr>
         <tr><td><code>coldNight</code></td><td>{{CFG.sheep.coldNight}}</td><td>Health % lost outside over a whole night</td></tr>
-        <tr><td><code>homeRadius</code></td><td>{{CFG.sheep.homeRadius}}</td><td>Evening/night: sheep this close to the door go in</td></tr>
+        <tr><td><code>parkRadius</code></td><td>{{CFG.sheep.parkRadius}}</td><td>Fully fed sheep this close to the stable wait there; they go in at evening</td></tr>
+        <tr><td><code>lambSize</code></td><td>{{CFG.sheep.lambSize}}</td><td>Newborn lambs are {{pct:CFG.sheep.lambSize}}% the size of a grown sheep (first day only)</td></tr>
+        <tr><td><code>lambFood</code></td><td>{{CFG.sheep.lambFood}}</td><td>Lambs need {{pct:CFG.sheep.lambFood}}% of an adult's food to be full</td></tr>
+        <tr><td><code>matureNights</code></td><td>{{CFG.sheep.matureNights}}</td><td>A lamb can have lambs itself from this night of its life on</td></tr>
 
         <tr><th colspan="3">Wolves: <code>CFG.wolf</code> and <code>CFG.pack</code></th></tr>
         <tr><td><code>speed</code> / <code>fleeSpeed</code></td><td>{{CFG.wolf.speed}} / {{CFG.wolf.fleeSpeed}}</td><td>Hunting speed / speed when running from the dog</td></tr>
@@ -325,6 +353,20 @@
         <tr><td><code>streams.dogSpeed</code> / <code>wolfSpeed</code></td><td>{{CFG.streams.dogSpeed}} / {{CFG.streams.wolfSpeed}}</td><td>Dog / wolf speed while wading</td></tr>
         <tr><td><code>streams.patchAcross</code></td><td>{{CFG.streams.patchAcross}}</td><td>Chance that a grass patch grows on the far side of a stream</td></tr>
         <tr><td><code>obstacles.wolfSeesHidden</code></td><td>{{CFG.obstacles.wolfSeesHidden}}</td><td>Wolves spot sheep under a tree only this close</td></tr>
+
+        <tr><th colspan="3">Tractor and farmer: <code>CFG.tractor</code>, <code>CFG.farmer</code></th></tr>
+        <tr><td><code>tractor.daysPerSeason</code></td><td>{{CFG.tractor.daysPerSeason}}</td><td>Tractor days per season (0 = never)</td></tr>
+        <tr><td><code>tractor.arrive</code></td><td>{{CFG.tractor.arrive}}</td><td>Drives in at {{hour:CFG.tractor.arrive}}</td></tr>
+        <tr><td><code>tractor.leaveEarly</code></td><td>{{CFG.tractor.leaveEarly}}</td><td>Leaves this many hours before evening starts</td></tr>
+        <tr><td><code>tractor.speed</code></td><td>{{CFG.tractor.speed}}</td><td>Driving speed (backs out a bit slower)</td></tr>
+        <tr><td><code>tractor.scareRadius</code></td><td>{{CFG.tractor.scareRadius}}</td><td>A moving tractor makes sheep this close step aside</td></tr>
+        <tr><td><code>tractor.wolfFear</code></td><td>{{CFG.tractor.wolfFear}}</td><td>Wolves keep this far away from the tractor</td></tr>
+
+        <tr><td><code>farmer.speed</code></td><td>{{CFG.farmer.speed}}</td><td>The farmer's walking speed</td></tr>
+        <tr><td><code>farmer.sheepRadius</code></td><td>{{CFG.farmer.sheepRadius}}</td><td>Sheep this close make way for the farmer</td></tr>
+        <tr><td><code>farmer.wolfFear</code></td><td>{{CFG.farmer.wolfFear}}</td><td>Wolves keep this far away from the farmer</td></tr>
+        <tr><td><code>farmer.petRadius</code></td><td>{{CFG.farmer.petRadius}}</td><td>The dog this close gets a pat</td></tr>
+        <tr><td><code>farmer.walkBack</code></td><td>{{CFG.farmer.walkBack}}</td><td>Hours before the tractor leaves that he walks back to it</td></tr>
 
         <tr><th colspan="3">Seasons &amp; time: <code>CFG.summer</code>, <code>CFG.winter</code>, <code>SEASONS</code>, <code>CLOCK</code></th></tr>
         <tr><td><code>summer.dogDrain</code></td><td>{{CFG.summer.dogDrain}}</td><td>Dog stamina drain multiplier in summer</td></tr>

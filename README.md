@@ -14,14 +14,15 @@ or all ewes are gone.
 ## How to play
 
 - Sheep run away from your Saint Bernard: use that to herd them.
-- Herd the sheep onto the lush grass. They only eat when the dog keeps its distance.
+- Hungry sheep look for grass on their own; herd them to it. They only eat when the dog keeps its distance.
 - The ring around a sheep shows what it ate today. Green = fully fed.
 - Hungry sheep lose health overnight and can starve.
-- Get every sheep into the stable before nightfall. Then the wolves come!
+- In the evening the fully fed sheep walk home by themselves; hungry ones stay out and must be herded in (once they are on the cobblestone patio in front of the door, they go in on their own). Make sure every sheep is in the stable before nightfall. Then the wolves come!
 - Wolves may attack by day too. Chase them off before they bite.
-- A fully fed ram + a fully fed ewe = a lamb overnight.
+- A fully fed ram + a fully fed ewe in the stable = a lamb overnight. Lambs are small on their first day and need less food, grown up on their second day, and can have lambs themselves from their second night on.
 - Running tires the dog. Its food bowl next to the stable restores energy.
 - Seasons change every 3 days. Summer days are long, winter days short and cold!
+- Once a season the farmer's tractor drives in through the gate and parks next to the stable for the day. The farmer works around the stable, digs, has a beer on the bench (not in winter!), pats the dog, and wolves keep away from both!
 - No rams or no ewes left = game over.
 
 ## Controls
