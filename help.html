@@ -150,7 +150,7 @@
         <tr><td>Wolves come</td><td>{{hour:SEASONS.0.night}}</td><td>{{hour:SEASONS.1.night}}</td><td>{{hour:SEASONS.2.night}}</td><td>{{hour:SEASONS.3.night}}</td></tr>
         <tr><td>Time until nightfall</td><td>≈ {{daysec:0}} s</td><td>≈ {{daysec:1}} s</td><td>≈ {{daysec:2}} s</td><td>≈ {{daysec:3}} s</td></tr>
         <tr><td>Night length</td><td>≈ {{nightsec:0}} s</td><td>≈ {{nightsec:1}} s</td><td>≈ {{nightsec:2}} s</td><td>≈ {{nightsec:3}} s</td></tr>
-        <tr><td>Looks</td><td>Fresh grass, lots of flowers, blossoms on the trees</td><td>Classic green alp</td><td>Golden grass, yellow and orange trees, fallen and falling leaves</td><td>Snow, bare trees, frozen lakes, snowy rocks, snowfall (different every day: none, light, moderate or heavy), a gloomy sky all day, footprints in the snow that fade after ~10 s</td></tr>
+        <tr><td>Looks</td><td>Fresh grass, lots of flowers, blossoms on the trees</td><td>Classic green alp</td><td>Golden grass, yellow and orange trees, fallen and falling leaves</td><td>Snow, bare trees, frozen lakes, snowy rocks, snowfall (different every day: none, light, moderate or heavy), a gloomy sky all day (darker while it snows), frozen streams you can walk across, footprints in the snow that fade after ~10 s</td></tr>
         <tr><td>Grass</td><td>Normal</td><td>Normal</td><td>Normal</td><td><b>{{less:CFG.grass.winterFactor}}% less food</b>: smaller, brown, muddy patches that empty quicker</td></tr>
         <tr><td>Ducks</td><td>Few, more each day (back from the south)</td><td>Most, with ducklings</td><td>Fewer each day (flying south)</td><td>None</td></tr>
         <tr><td>Gameplay</td><td>–</td><td>Hot: the dog tires {{more:CFG.summer.dogDrain}}% faster</td><td>–</td><td>Cold: sheep outside lose health all day (slowly), fast in the evening and very fast at night. Sheep are {{slow:CFG.winter.sheepSlow}}% slower in the snow. Bare trees give no cover.</td></tr>
@@ -195,7 +195,7 @@
     <div class="inner">
       <ul>
         <li>Top speed {{CFG.dog.speed}}. Running costs <b>stamina</b> ({{CFG.dog.staminaDrain}}% per second at full speed, {{more:CFG.summer.dogDrain}}% more in summer). Standing still restores {{CFG.dog.staminaRecover}}% per second.</li>
-        <li>Below <b>{{CFG.dog.tiredAt}}%</b> stamina the dog runs at {{pct:CFG.dog.tiredSpeed}}% speed (and pants); below <b>{{CFG.dog.exhaustedAt}}%</b> only at {{pct:CFG.dog.exhaustedSpeed}}%, slower than sheep and wolves.</li>
+        <li>Below <b>{{CFG.dog.tiredAt}}%</b> stamina the dog runs at {{pct:CFG.dog.tiredSpeed}}% speed (and pants); below <b>{{CFG.dog.exhaustedAt}}%</b> only at {{pct:CFG.dog.exhaustedSpeed}}%, and with no stamina left at all only at {{pct:CFG.dog.emptySpeed}}%, slower than sheep and wolves.</li>
         <li>The <b>food bowl</b> right of the stable restores stamina <b>{{CFG.bowl.rate}}× faster</b> ({{bowlrate}}% per second). The bowl holds {{CFG.bowl.food}}%, and it empties by the same amount the dog gains. It is refilled every morning.</li>
         <li>A wolf may bite the dog: <b>−{{CFG.wolf.dogBite}}% stamina</b> per bite.</li>
         <li>When bored (standing still 4–8 s) the dog chases its tail or rolls on its back. Click or press a key to snap it out.</li>
@@ -229,6 +229,12 @@
     <div class="inner">
       <ul>
         <li><b>Grass patches</b>: {{CFG.grass.minPatches}}–{{CFG.grass.maxPatches}} ({{CFG.grass.minPatches}} + 1 per 4 sheep). Total food ≈ sheep × 100% × {{CFG.grass.surplus}}, so everyone can get full if you move the flock between patches. In winter it's {{less:CFG.grass.winterFactor}}% less. Every night the grass regrows somewhere else.</li>
+        <li><b>Streams</b> ({{range:CFG.streams.count}}) meander across corners of the pasture (never the stable's corner).
+          Together they cut off {{pct:CFG.streams.cutOff.0}}–{{pct:CFG.streams.cutOff.1}}% of the pasture, which you can only reach by crossing water.
+          Long streams have two bridges.
+          Wading through is slow: sheep move at {{pct:CFG.streams.sheepSpeed}}% speed, the dog and wolves at {{pct:CFG.streams.dogSpeed}}%.
+          Each stream has a <b>wooden bridge</b>: herd the sheep across it to keep them moving. Calm sheep don't wade in by themselves.
+          Sometimes a grass patch grows on the far side of a stream. In winter the streams freeze, and everyone can walk straight across.</li>
         <li><b>Trees</b> ({{range:CFG.obstacles.trees}}), <b>rocks</b> ({{range:CFG.obstacles.rocks}}) and <b>lakes</b> ({{range:CFG.obstacles.lakes}}) are placed randomly every new game. Trunks, rocks and lakes block everyone. The dog and wolves steer around them; sheep just slide along.</li>
         <li><b>The stable</b> has a roof. It turns see-through while sheep (or the dog) are inside. Two lamps next to the door switch on when it gets dark.</li>
         <li><b>Ducks</b> and <b>bees</b> (spring and summer, around the trees) are just for fun. In fall the wind blows the fallen leaves around.</li>
@@ -277,6 +283,7 @@
         <tr><td><code>staminaRecover</code></td><td>{{CFG.dog.staminaRecover}}</td><td>Stamina % gained per second standing still</td></tr>
         <tr><td><code>tiredAt</code> / <code>tiredSpeed</code></td><td>{{CFG.dog.tiredAt}} / {{CFG.dog.tiredSpeed}}</td><td>Below {{CFG.dog.tiredAt}}% stamina run at {{pct:CFG.dog.tiredSpeed}}% speed</td></tr>
         <tr><td><code>exhaustedAt</code> / <code>exhaustedSpeed</code></td><td>{{CFG.dog.exhaustedAt}} / {{CFG.dog.exhaustedSpeed}}</td><td>Below {{CFG.dog.exhaustedAt}}% stamina run at {{pct:CFG.dog.exhaustedSpeed}}% speed</td></tr>
+        <tr><td><code>emptySpeed</code></td><td>{{CFG.dog.emptySpeed}}</td><td>Speed with no stamina left at all ({{pct:CFG.dog.emptySpeed}}%)</td></tr>
 
         <tr><th colspan="3">Sheep: <code>CFG.sheep</code></th></tr>
         <tr><td><code>dogRadius</code></td><td>{{CFG.sheep.dogRadius}}</td><td>Sheep move away from the dog inside this distance</td></tr>
@@ -303,7 +310,7 @@
         <tr><td><code>pack.dayFraction</code></td><td>{{CFG.pack.dayFraction}}</td><td>Day pack size relative to the night pack</td></tr>
         <tr><td><code>pack.stagger</code></td><td>{{CFG.pack.stagger}}</td><td>Seconds between arriving wolves</td></tr>
 
-        <tr><th colspan="3">Bowl, grass, obstacles: <code>CFG.bowl</code>, <code>CFG.grass</code>, <code>CFG.obstacles</code></th></tr>
+        <tr><th colspan="3">Bowl, grass, obstacles, streams: <code>CFG.bowl</code>, <code>CFG.grass</code>, <code>CFG.obstacles</code>, <code>CFG.streams</code></th></tr>
         <tr><td><code>bowl.food</code></td><td>{{CFG.bowl.food}}</td><td>Food in the bowl each morning</td></tr>
         <tr><td><code>bowl.rate</code></td><td>{{CFG.bowl.rate}}</td><td>Eating from the bowl restores stamina this many times faster</td></tr>
         <tr><td><code>bowl.wolfSmell</code></td><td>{{CFG.bowl.wolfSmell}}</td><td>Wolves this close to the bowl go for the food</td></tr>
@@ -311,6 +318,11 @@
         <tr><td><code>grass.minPatches</code> / <code>maxPatches</code></td><td>{{CFG.grass.minPatches}} / {{CFG.grass.maxPatches}}</td><td>Number of grass patches</td></tr>
         <tr><td><code>grass.winterFactor</code></td><td>{{CFG.grass.winterFactor}}</td><td>Food in winter ({{less:CFG.grass.winterFactor}}% less)</td></tr>
         <tr><td><code>obstacles.trees</code> / <code>rocks</code> / <code>lakes</code></td><td>{{CFG.obstacles.trees}} / {{CFG.obstacles.rocks}} / {{CFG.obstacles.lakes}}</td><td>How many of each (min, max)</td></tr>
+        <tr><td><code>streams.count</code> / <code>width</code></td><td>{{CFG.streams.count}} / {{CFG.streams.width}}</td><td>Number of streams (min, max) / their width in px (min, max)</td></tr>
+        <tr><td><code>streams.cutOff</code></td><td>{{CFG.streams.cutOff}}</td><td>Share of the pasture behind the streams, all streams together (min, max; 0.2 = 20%)</td></tr>
+        <tr><td><code>streams.sheepSpeed</code></td><td>{{CFG.streams.sheepSpeed}}</td><td>Sheep speed while wading (1 = normal)</td></tr>
+        <tr><td><code>streams.dogSpeed</code> / <code>wolfSpeed</code></td><td>{{CFG.streams.dogSpeed}} / {{CFG.streams.wolfSpeed}}</td><td>Dog / wolf speed while wading</td></tr>
+        <tr><td><code>streams.patchAcross</code></td><td>{{CFG.streams.patchAcross}}</td><td>Chance that a grass patch grows on the far side of a stream</td></tr>
         <tr><td><code>obstacles.wolfSeesHidden</code></td><td>{{CFG.obstacles.wolfSeesHidden}}</td><td>Wolves spot sheep under a tree only this close</td></tr>
 
         <tr><th colspan="3">Seasons &amp; time: <code>CFG.summer</code>, <code>CFG.winter</code>, <code>SEASONS</code>, <code>CLOCK</code></th></tr>
@@ -322,6 +334,7 @@
         <tr><td><code>winter.snowChance</code></td><td>{{CFG.winter.snowChance}}</td><td>Chance of a winter day with no / light / moderate / heavy snowfall</td></tr>
         <tr><td><code>winter.snowFlakes</code></td><td>{{CFG.winter.snowFlakes}}</td><td>Number of snowflakes for each kind of day</td></tr>
         <tr><td><code>winter.gloom</code></td><td>{{CFG.winter.gloom}}</td><td>How dim winter days are (0 = bright, 0.65 = night)</td></tr>
+        <tr><td><code>winter.snowDark</code></td><td>{{CFG.winter.snowDark}}</td><td>Extra darkness while it snows: none / light / moderate / heavy snowfall</td></tr>
         <tr><td><code>SEASONS[0]</code> <span class="note">Spring</span></td><td>{{SEASONS.0.morning}} / {{SEASONS.0.evening}} / {{SEASONS.0.night}}</td><td>Getting light [from, to] / getting dark [from, to] / wolves come (clock hours)</td></tr>
         <tr><td><code>SEASONS[1]</code> <span class="note">Summer</span></td><td>{{SEASONS.1.morning}} / {{SEASONS.1.evening}} / {{SEASONS.1.night}}</td><td>Getting light [from, to] / getting dark [from, to] / wolves come (clock hours)</td></tr>
         <tr><td><code>SEASONS[2]</code> <span class="note">Fall</span></td><td>{{SEASONS.2.morning}} / {{SEASONS.2.evening}} / {{SEASONS.2.night}}</td><td>Getting light [from, to] / getting dark [from, to] / wolves come (clock hours)</td></tr>

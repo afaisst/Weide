@@ -15,6 +15,7 @@ window.WEIDE = (() => {
       staminaRecover: 6,     // % per second when standing still
       tiredAt: 30, tiredSpeed: 0.7,          // below 30% stamina: 70% speed
       exhaustedAt: 10, exhaustedSpeed: 0.45, // below 10% stamina: 45% speed
+      emptySpeed: 0.25,                      // no stamina left at all: 25% speed
     },
     sheep: {
       r: 10,
@@ -41,11 +42,17 @@ window.WEIDE = (() => {
     pack:  { randomness: 0.2, dayFraction: 0.5, stagger: [2, 4] },
     bowl: { food: 100, rate: 3, reach: 16, wolfSmell: 120 }, // wolves close to the bowl eat from it too // dog food bowl: refills stamina 3x faster than resting
     obstacles: { trees: [3, 5], rocks: [3, 6], lakes: [1, 3], wolfSeesHidden: 55 }, // wolves only spot sheep under a tree up close
+    // streams near the corners, each with a wooden bridge
+    streams: { count: [1, 2], width: [18, 24],
+               cutOff: [0.15, 0.25],  // share of the pasture behind the streams (all streams together)
+               sheepSpeed: 0.35, dogSpeed: 0.6, wolfSpeed: 0.6,   // speed while wading through the water
+               patchAcross: 0.6 },   // chance that a grass patch grows on the far side of a stream
     fastForward: 4,          // speed multiplier while 'F' is on (daytime only)
     grass: { surplus: 1.3, minPatches: 3, maxPatches: 6, winterFactor: 0.85 }, // food in winter (0.85 = 15% less)
     summer: { dogDrain: 1.15 },                   // hot: the dog tires 15% faster
     winter: { dayDrain: 0.08, eveningDrain: 1.0, nightDrain: 1.5, // health % per second for sheep outside
               gloom: 0.2,    // winter days are never fully bright
+              snowDark: [0, 0.07, 0.14, 0.22],  // extra darkness while it snows (none / light / moderate / heavy)
               sheepSlow: [0.85, 0.9],    // sheep move 10-15% slower in winter (random per sheep)
               // snowfall, picked at random every winter day: none / light / moderate / heavy
               snowChance: [0.3, 0.35, 0.25, 0.1],   // chance of each kind of day

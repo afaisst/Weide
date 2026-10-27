@@ -162,6 +162,7 @@
     wolfAdj: 0,        // player's wolf setting: -50 .. +50 (%)
     seasonStart: 0,    // season of day 1 (0 spring, 1 summer, 2 fall, 3 winter)
     snowLevel: 2,      // today's snowfall in winter: 0 none, 1 light, 2 moderate, 3 heavy
+    flurry: 1,         // how hard it is snowing right now (0.5 .. 1)
     sheepTalkCD: 0, wolfTalkCD: 0,
     confirmExit: false, // "really exit?" dialog is open
     overDelay: 0,
@@ -187,7 +188,10 @@
   const currentHour = () => state.hour;
   // How dark the sky is (0 = day, 0.65 = night); winter days stay a bit gloomy
   function darkness(h) {
-    return Math.max(rawDarkness(h), isWinter() ? CFG.winter.gloom : 0);
+    if (!isWinter()) return rawDarkness(h);
+    // gloomy winter days, darker still while it snows (the snow comes in spells)
+    const snow = (CFG.winter.snowDark[state.snowLevel] || 0) * state.flurry;
+    return Math.max(rawDarkness(h), CFG.winter.gloom + snow);
   }
   // 0..1: how much of a night it is (ignores the winter gloom) - for lamps, lights, glowing eyes
   let nightLevel = 0;
@@ -336,11 +340,28 @@
     const count = clamp(G.minPatches + Math.floor(nSheep / 4), G.minPatches, G.maxPatches);
     const total = Math.max(2, nSheep) * 100 * G.surplus * (winter ? G.winterFactor : 1);
     const list = [];
+    // Bonus: sometimes a small extra patch grows across a stream (in the corner behind it)
+    for (const st of streams) {
+      if (Math.random() >= CFG.streams.patchAcross) continue;
+      const max = rand(18, 26) * (winter ? G.winterFactor : 1), R = 15 + 4 * Math.sqrt(max);
+      for (let tries = 0; tries < 300; tries++) {
+        const a = Math.abs(st.p0.x - st.corner.x), b = Math.abs(st.p1.y - st.corner.y);
+        const x = st.corner.x + (st.corner.x ? -1 : 1) * rand(R + 10, Math.max(R + 11, a));
+        const y = st.corner.y + (st.corner.y ? -1 : 1) * rand(R + 10, Math.max(R + 11, b));
+        if (sideOf(st, { x, y }) !== st.side) continue;
+        if (nearStream(x, y, R + 8) || nearBridge(x, y, R + 10)) continue;
+        if (solids.some((o) => Math.hypot(o.x - x, o.y - y) < R * 0.55 + o.r)) continue;
+        if (lakes.some((l) => inWater(l, x, y, R * 0.8 + 12))) continue;
+        list.push({ x, y, R, max, amount: full ? max : 0, winter, tex: makePatchTexture(R, winter) });
+        break;
+      }
+    }
     for (let i = 0; i < count; i++) {
       const max = (total / count) * rand(0.75, 1.25);
       const R = 15 + 4 * Math.sqrt(max);
       for (let tries = 0; tries < 300; tries++) {
         const x = rand(R + 20, FW - R - 20), y = rand(R + 20, FH - R - 20);
+        if (nearStream(x, y, R * 0.8 + 6) || nearBridge(x, y, R + 10)) continue;
         // keep away from the stable and its door area
         const nearStable = x > S.x - R - 40 && x < S.x + S.w + R + 120 && y < S.bottom + R + 110;
         if (nearStable) continue;
@@ -457,12 +478,233 @@
     return t.texs[i];
   }
 
+
+  // ---------------------------------------------------------------------------
+  // Streams: meander diagonally across a corner of the pasture (never the stable's).
+  // Wading through is slow; the wooden bridge is the quick way across.
+  // ---------------------------------------------------------------------------
+  let streams = [];
+
+  // corner: 'br' / 'bl' / 'tr'; a, b: how far along the two edges the stream starts and ends
+  function makeStream(corner, a, b) {
+    const W = CFG.streams;
+    const cx = corner.includes('r') ? FW : 0, cy = corner.includes('b') ? FH : 0;
+    // from the horizontal edge to the vertical edge, a bit beyond the fence on both ends
+    const p0 = { x: cx === FW ? FW - a : a, y: cy === FH ? FH + 25 : -25 };
+    const p1 = { x: cx === FW ? FW + 25 : -25, y: cy === FH ? FH - b : b };
+    const dx = p1.x - p0.x, dy = p1.y - p0.y, L = Math.hypot(dx, dy);
+    const nx = -dy / L, ny = dx / L;
+    // longer streams meander a bit more
+    const amp = rand(12, 18) + L * 0.025, k = rand(1.2, 1.8) + L / 700, ph = rand(0, TAU);
+    const pts = [];
+    for (let i = 0; i <= 40; i++) {
+      const t = i / 40, off = amp * Math.sin(TAU * k * t + ph);
+      pts.push({ x: p0.x + dx * t + nx * off, y: p0.y + dy * t + ny * off });
+    }
+    const cum = [0];
+    for (let i = 1; i < pts.length; i++) cum.push(cum[i - 1] + Math.hypot(pts[i].x - pts[i - 1].x, pts[i].y - pts[i - 1].y));
+    const st = { corner: { x: cx, y: cy }, p0, p1, pts, cum, len: cum[cum.length - 1], w: rand(W.width[0], W.width[1]) };
+    // bridges: one on a short stream, two on a long one (spread out, inside the pasture)
+    const nb = st.len > 520 ? 2 : 1;
+    st.bridges = [];
+    for (let i = 0; i < nb; i++) {
+      const f = nb === 1 ? rand(0.38, 0.62) : (i === 0 ? rand(0.22, 0.36) : rand(0.64, 0.78));
+      const bp = streamPointAt(st, st.len * f);
+      st.bridges.push({ x: bp.x, y: bp.y, tx: bp.tx, ty: bp.ty, len: st.w + 24, wid: 26 });
+    }
+    // flowing streaks for the animation
+    st.streaks = Array.from({ length: Math.round(st.len / 9) }, () => ({ s: rand(0, st.len), off: rand(-0.38, 0.38), sp: rand(0.8, 1.3), l: rand(5, 11) }));
+    st.side = sideOf(st, st.corner);
+    return st;
+  }
+
+  function streamPointAt(st, d) {
+    d = clamp(d, 0, st.len);
+    let i = 1;
+    while (i < st.cum.length - 1 && st.cum[i] < d) i++;
+    const a = st.pts[i - 1], b = st.pts[i], segL = st.cum[i] - st.cum[i - 1] || 1;
+    const t = (d - st.cum[i - 1]) / segL;
+    return { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t, tx: (b.x - a.x) / segL, ty: (b.y - a.y) / segL };
+  }
+
+  // distance from a point to the middle line of the stream
+  function streamDist(st, x, y) {
+    let best = 1e9;
+    for (let i = 1; i < st.pts.length; i++) {
+      const a = st.pts[i - 1], b = st.pts[i];
+      const dx = b.x - a.x, dy = b.y - a.y;
+      const t = clamp(((x - a.x) * dx + (y - a.y) * dy) / (dx * dx + dy * dy), 0, 1);
+      best = Math.min(best, Math.hypot(x - a.x - dx * t, y - a.y - dy * t));
+    }
+    return best;
+  }
+  // which side of the stream a point is on (+1 / -1), using the straight line p0 -> p1
+  function sideOf(st, p) {
+    return Math.sign((st.p1.x - st.p0.x) * (p.y - st.p0.y) - (st.p1.y - st.p0.y) * (p.x - st.p0.x)) || 1;
+  }
+  function onBridge(p) {
+    for (const st of streams) for (const B of st.bridges) {
+      const rx = p.x - B.x, ry = p.y - B.y;
+      const along = rx * B.ty - ry * B.tx;        // across the stream (walking direction)
+      const across = rx * B.tx + ry * B.ty;       // along the stream
+      if (Math.abs(along) <= B.len / 2 + 4 && Math.abs(across) <= B.wid / 2) return true;
+    }
+    return false;
+  }
+  // wading in a stream (not on a bridge)?
+  function inStream(p) {
+    if (!streams.length || isWinter()) return false;   // frozen in winter: no wading
+    for (const st of streams) if (streamDist(st, p.x, p.y) < st.w / 2 + 1) return !onBridge(p);
+    return false;
+  }
+  function nearStream(x, y, pad) {
+    return streams.some((st) => streamDist(st, x, y) < st.w / 2 + pad);
+  }
+  function nearBridge(x, y, pad) {
+    return streams.some((st) => st.bridges.some((B) => Math.hypot(B.x - x, B.y - y) < B.len / 2 + pad));
+  }
+
+  // The streams cut off a corner each. Together they take `cutOff` of the pasture
+  // (the part you can't reach from the stable without crossing water).
+  function generateStreams() {
+    const W = CFG.streams;
+    const corners = ['br', 'bl', 'tr'].sort(() => Math.random() - 0.5);   // never top-left (the stable)
+    const n = clamp(Math.round(rand(W.count[0], W.count[1])), 0, 3);
+    // (x1.25: the triangles are measured from just outside the fence and the meanders eat a bit)
+    const total = rand(W.cutOff[0], W.cutOff[1]) * FW * FH * 1.25;
+    const legs = {};   // a = along the top/bottom edge, b = along the left/right edge
+    for (const c of corners.slice(0, n)) {
+      const area = (total / n) * rand(0.8, 1.2);               // triangle area = a * b / 2
+      let a = Math.sqrt(2 * area * rand(0.9, 1.7));
+      // keep away from the stable, its door and the morning meadow
+      const maxA = c === 'tr' ? FW - 440 : FW * 0.85;
+      const maxB = c === 'bl' ? FH - 360 : FH * 0.85;
+      a = clamp(a, 120, maxA);
+      let b = clamp((2 * area) / a, 120, maxB);
+      a = clamp((2 * area) / b, 120, maxA);
+      legs[c] = { a, b };
+    }
+    // two streams on the same edge must not run into each other
+    const shrink = (c1, k1, c2, k2, room) => {
+      if (!legs[c1] || !legs[c2]) return;
+      const over = legs[c1][k1] + legs[c2][k2] - room;
+      if (over > 0) { legs[c1][k1] -= over / 2; legs[c2][k2] -= over / 2; }
+    };
+    shrink('br', 'a', 'bl', 'a', FW - 120);   // bottom edge
+    shrink('br', 'b', 'tr', 'b', FH - 120);   // right edge
+    streams = Object.entries(legs).map(([c, L]) => makeStream(c, L.a, L.b));
+  }
+
+  function paintStreams(g) {
+    const si = seasonIndex();
+    const path = (st) => {
+      g.beginPath();
+      st.pts.forEach((p, i) => (i ? g.lineTo(p.x, p.y) : g.moveTo(p.x, p.y)));
+    };
+    g.lineJoin = 'round'; g.lineCap = 'round';
+    for (const st of streams) {
+      path(st); g.strokeStyle = si === 3 ? 'rgba(255,255,255,0.6)' : si === 2 ? 'rgba(150,120,40,0.35)' : 'rgba(70,110,40,0.4)';
+      g.lineWidth = st.w + 16; g.stroke();                                   // damp grass / snow drift
+      path(st); g.strokeStyle = si === 3 ? '#c6d0d8' : '#9a8a58'; g.lineWidth = st.w + 7; g.stroke();   // banks
+      path(st); g.strokeStyle = si === 3 ? '#8db3c8' : '#2f6888'; g.lineWidth = st.w + 2; g.stroke();
+      path(st); g.strokeStyle = si === 3 ? '#cfe6f1' : '#4590b6'; g.lineWidth = st.w; g.stroke();     // water / ice
+      path(st); g.strokeStyle = si === 3 ? '#c3dcea' : '#3b80a6'; g.lineWidth = st.w * 0.45; g.stroke();
+      // pebbles and a few reeds on the banks
+      let seed = Math.floor(st.p0.x * 3 + st.p1.y * 7);
+      const rnd = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
+      for (let i = 0; i < st.len / 14; i++) {
+        const q = streamPointAt(st, rnd() * st.len), side = rnd() < 0.5 ? -1 : 1;
+        const off = st.w / 2 + 3 + rnd() * 4;
+        const x = q.x - q.ty * off * side, y = q.y + q.tx * off * side;
+        if (onBridgeAt(st, x, y)) continue;
+        if (rnd() < 0.6) {
+          g.fillStyle = si === 3 ? '#f4f7fa' : '#8f8d84';
+          g.beginPath(); g.ellipse(x, y, 2 + rnd() * 1.6, 1.5 + rnd(), rnd() * 3, 0, TAU); g.fill();
+        } else if (si !== 3) {
+          g.strokeStyle = si === 2 ? '#a68a40' : '#3f7d2c'; g.lineWidth = 1.3;
+          for (let k = 0; k < 4; k++) {
+            const a = Math.atan2(y - q.y, x - q.x) + (k - 1.5) * 0.4;
+            g.beginPath(); g.moveTo(x, y); g.lineTo(x + Math.cos(a) * (6 + k), y + Math.sin(a) * (6 + k)); g.stroke();
+          }
+        }
+      }
+    }
+    g.lineCap = 'butt';
+  }
+  function onBridgeAt(st, x, y) {
+    return st.bridges.some((B) => {
+      const rx = x - B.x, ry = y - B.y;
+      return Math.abs(rx * B.ty - ry * B.tx) <= B.len / 2 + 6 && Math.abs(rx * B.tx + ry * B.ty) <= B.wid / 2 + 6;
+    });
+  }
+
+  // flowing water: light streaks drifting downstream (leaves in fall, nothing on ice)
+  function updateStreams(dt) {
+    for (const st of streams) for (const k of st.streaks) {
+      k.s += 26 * k.sp * dt;
+      if (k.s > st.len) k.s -= st.len;
+    }
+  }
+  function drawStreamFlow() {
+    const si = seasonIndex();
+    if (si === 3) return;
+    ctx.lineCap = 'round';
+    for (const st of streams) {
+      for (const k of st.streaks) {
+        const a = streamPointAt(st, k.s), off = k.off * st.w;
+        const x = a.x - a.ty * off, y = a.y + a.tx * off;
+        if (si === 2 && k.l > 9.5) {                          // a floating leaf now and then
+          ctx.fillStyle = '#e0a030';
+          ctx.beginPath(); ctx.ellipse(x, y, 2.6, 1.5, k.s * 0.05, 0, TAU); ctx.fill();
+          continue;
+        }
+        ctx.strokeStyle = 'rgba(225,242,255,0.45)';
+        ctx.lineWidth = 1.4;
+        ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + a.tx * k.l, y + a.ty * k.l); ctx.stroke();
+      }
+    }
+    ctx.lineCap = 'butt';
+  }
+
+  // wooden bridges (drawn above the water, below the animals)
+  function drawBridges() {
+    const winter = isWinter();
+    for (const st of streams) for (const B of st.bridges) {
+      ctx.save();
+      ctx.translate(B.x, B.y);
+      ctx.rotate(Math.atan2(B.ty, B.tx) + Math.PI / 2);   // local x = across the stream
+      const L = B.len, Wd = B.wid;
+      ctx.fillStyle = 'rgba(0,0,0,0.25)';
+      ctx.fillRect(-L / 2 + 3, -Wd / 2 + 4, L, Wd);
+      ctx.fillStyle = '#8a5a2b';
+      ctx.fillRect(-L / 2, -Wd / 2, L, Wd);
+      ctx.strokeStyle = '#5a3a1c'; ctx.lineWidth = 1;
+      for (let x = -L / 2 + 5; x < L / 2; x += 5) {          // planks
+        ctx.beginPath(); ctx.moveTo(x, -Wd / 2); ctx.lineTo(x, Wd / 2); ctx.stroke();
+      }
+      ctx.fillStyle = '#5e3c1d';                              // rails
+      ctx.fillRect(-L / 2 - 2, -Wd / 2 - 2, L + 4, 3.5);
+      ctx.fillRect(-L / 2 - 2, Wd / 2 - 1.5, L + 4, 3.5);
+      for (const px of [-L / 2 - 2, L / 2 - 2]) for (const py of [-Wd / 2 - 3, Wd / 2 - 2]) {
+        ctx.fillStyle = '#4a2f16'; ctx.fillRect(px, py, 5, 5); // posts
+      }
+      if (winter) {
+        ctx.fillStyle = 'rgba(245,248,252,0.85)';
+        ctx.fillRect(-L / 2, -Wd / 2 + 2, L, Wd * 0.45);
+        ctx.fillRect(-L / 2 - 2, -Wd / 2 - 2.5, L + 4, 2);
+      }
+      ctx.restore();
+    }
+  }
+
   function generateObstacles() {
     trees = []; rocks = []; lakes = []; ducks = [];
+    generateStreams();
     const all = [];
     const fits = (x, y, space, edge = 25) => {
       if (x < space + edge || x > FW - space - edge || y < space + edge || y > FH - space - edge) return false;
       if (x < S.x + S.w + 170 && y < S.bottom + 190) return false; // stable, door, bowl, morning release
+      if (nearStream(x, y, space + 22) || nearBridge(x, y, space + 40)) return false;
       return all.every((o) => Math.hypot(o.x - x, o.y - y) > o.space + space + 45);
     };
     const place = (space, edge) => {
@@ -879,6 +1121,7 @@
   function paintObstacleLayer() {
     const g = obstacleLayer.getContext('2d');
     g.clearRect(0, 0, FW, FH);
+    paintStreams(g);
     for (const lake of lakes) paintLake(g, lake);
     // tree shadows + trunks
     for (const t of trees) {
@@ -1157,6 +1400,7 @@
     const si = seasonIndex();
     // winter: today's snowfall, with slow lulls and flurries during the day
     const flurry = 0.75 + 0.25 * Math.sin(state.t * 0.09) * Math.sin(state.t * 0.031 + 1);
+    state.flurry = flurry;
     const snow = CFG.winter.snowFlakes[state.snowLevel] || 0;
     const want = si === 3 ? Math.round(snow * flurry) : si === 2 ? 14 : 0;
     const heavy = state.snowLevel === 3;
@@ -1472,6 +1716,7 @@
 
   function dogMaxSpeed() {
     const C = CFG.dog;
+    if (dog.stamina <= 0.5) return C.speed * C.emptySpeed;   // completely out of breath
     if (dog.stamina < C.exhaustedAt) return C.speed * C.exhaustedSpeed;
     if (dog.stamina < C.tiredAt) return C.speed * C.tiredSpeed;
     return C.speed;
@@ -1483,7 +1728,7 @@
     const d = Math.hypot(dx, dy);
     let vx = 0, vy = 0;
     if (d > 1) {
-      const sp = dogMaxSpeed() * Math.min(1, d / 25);
+      const sp = dogMaxSpeed() * Math.min(1, d / 25) * (inStream(dog) ? CFG.streams.dogSpeed : 1);
       vx = (dx / d) * sp; vy = (dy / d) * sp;
       [vx, vy] = avoidSolids(dog, vx, vy, d);
     }
@@ -1737,6 +1982,9 @@
         if (s.x < em || s.x > FW - em || s.y < em || s.y > FH - em) {
           s.heading = Math.atan2(FH / 2 - s.y, FW / 2 - s.x) + s.headJit;
         }
+        // calm sheep don't wander into a stream by themselves (they turn along the bank)
+        const ax = s.x + Math.cos(s.heading) * 22, ay = s.y + Math.sin(s.heading) * 22;
+        if (!isWinter() && !inStream(s) && nearStream(ax, ay, 4) && !nearBridge(ax, ay, 4)) s.heading += Math.PI * 0.6 * (s.headJit >= 0 ? 1 : -1);
       }
       if (!s.grazing) {
         dx += Math.cos(s.heading) * sp;
@@ -1752,7 +2000,7 @@
     if (s.y > FH - m) dy -= (s.y - (FH - m)) * 1.5;
 
     // winter: deep snow, cold legs - every sheep is 10-15% slower
-    const slow = isWinter() ? (s.winterSlow || 0.875) : 1;
+    const slow = (isWinter() ? (s.winterSlow || 0.875) : 1) * (inStream(s) ? CFG.streams.sheepSpeed : 1);
     dx *= slow; dy *= slow;
     const k = Math.min(1, (alarm > 0.05 ? 7 : 2) * dt);
     s.vx += (dx - s.vx) * k;
@@ -1905,7 +2153,8 @@
     w.vx += (dx - w.vx) * k;
     w.vy += (dy - w.vy) * k;
     const sp = Math.hypot(w.vx, w.vy);
-    if (sp > C.fleeSpeed) { w.vx *= C.fleeSpeed / sp; w.vy *= C.fleeSpeed / sp; }
+    const wmax = C.fleeSpeed * (inStream(w) ? CFG.streams.wolfSpeed : 1);
+    if (sp > wmax) { w.vx *= wmax / sp; w.vy *= wmax / sp; }
     w.x += w.vx * dt;
     w.y += w.vy * dt;
     if (sp > 5) { w.fx = w.vx / sp; w.fy = w.vy / sp; }
@@ -1986,6 +2235,7 @@
     applyArrowKeys();
     updateDog(dt);
     updateDucks(dt);
+    updateStreams(dt);
     for (const s of sheep) updateSheep(s, dt);
     for (const w of wolves) updateWolf(w, dt);
     wolves = wolves.filter((w) => !w.gone);
@@ -2751,7 +3001,7 @@
     const m = state.msg;
     if (!m || state.screen !== 'play') return;
     const a = clamp(Math.min(m.t, m.max - m.t) / 0.3, 0, 1);
-    ctx.font = '600 17px system-ui, sans-serif';
+    ctx.font = `23px ${TXT}`;
     // long messages wrap onto a second line (there is room right of the stable)
     let lines = [m.text];
     const maxW = FW - 270 - 26 - 32;
@@ -2763,16 +3013,21 @@
       if (lines.some((l) => ctx.measureText(l).width > maxW)) lines = wrapText(m.text, maxW).slice(0, 2);
     }
     const tw = Math.max(...lines.map((l) => ctx.measureText(l).width));
-    const lh = 22, bh = 14 + lines.length * lh;
+    const lh = 22, bh = 12 + lines.length * lh;
     const x = clamp(FW / 2 + 110, tw / 2 + 270, FW - tw / 2 - 26), y = 16;   // right of the stable
     ctx.globalAlpha = a;
-    ctx.fillStyle = 'rgba(15,25,18,0.8)';
-    roundRect(x - tw / 2 - 16, y, tw + 32, bh, 10);
-    ctx.fill();
+    // pixel-style box like the menus
+    const bx = Math.round(x - tw / 2 - 16), bw = Math.round(tw + 32);
+    ctx.fillStyle = 'rgba(0,0,0,0.4)';
+    ctx.fillRect(bx + 4, y + 4, bw, bh);
+    ctx.fillStyle = 'rgba(24,48,32,0.92)';
+    ctx.fillRect(bx, y, bw, bh);
+    ctx.strokeStyle = COL.cream; ctx.lineWidth = 2;
+    ctx.strokeRect(bx + 1, y + 1, bw - 2, bh - 2);
     ctx.fillStyle = '#fbf6e4';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    lines.forEach((l, i) => ctx.fillText(l, x, y + 7 + lh / 2 + i * lh + 1));
+    lines.forEach((l, i) => ctx.fillText(l, x, y + 6 + lh / 2 + i * lh + 1));
     ctx.globalAlpha = 1;
   }
 
@@ -2916,6 +3171,8 @@
     drawPatches();
     drawPrints();
     ctx.drawImage(obstacleLayer, 0, 0);
+    drawStreamFlow();
+    drawBridges();
     drawLakeRipples();
     drawDucks();
     drawStable();
@@ -3518,7 +3775,10 @@
       for (let i = 0; i < steps && state.screen === 'play'; i++) update(dt);
     }
     else if (state.screen === 'over') state.overT += dt;
-    if (!state.paused && !state.confirmExit) updateWeather(dt);
+    if (!state.paused && !state.confirmExit) {
+      updateWeather(dt);
+      if (state.screen !== 'play') updateStreams(dt);   // keep the water flowing on the menus too
+    }
     render();
     requestAnimationFrame(frame);
   }
@@ -3529,7 +3789,7 @@
     state, SEASONS, CLOCK, CFG,
     get sheep() { return sheep; }, get wolves() { return wolves; },
     get dog() { return dog; }, get patches() { return patches; }, mouse, bowl,
-    get trees() { return trees; }, get rocks() { return rocks; }, get lakes() { return lakes; }, get ducks() { return ducks; },
+    get trees() { return trees; }, get rocks() { return rocks; }, get lakes() { return lakes; }, get streams() { return streams; }, get ducks() { return ducks; },
     get groundLeaves() { return groundLeaves; }, get bees() { return bees; },
   };
 })();
