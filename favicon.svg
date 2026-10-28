@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Weide: a fluffy sheep on a patch of alpine grass -->
+  <clipPath id="tile"><rect width="64" height="64" rx="14"/></clipPath>
+  <rect width="64" height="64" rx="14" fill="#5fa846"/>
+  <rect y="44" width="64" height="20" fill="#4f9a3a" opacity=".6" clip-path="url(#tile)"/>
+  <ellipse cx="32" cy="56" rx="19" ry="3.6" fill="#1d3a14" opacity=".35"/>
+  <!-- legs -->
+  <rect x="21" y="44" width="5.5" height="12" rx="2.5" fill="#3a3330"/>
+  <rect x="37.5" y="44" width="5.5" height="12" rx="2.5" fill="#3a3330"/>
+  <!-- wool: outline pass, then fill pass -->
+  <g fill="#b8b2a6">
+    <circle cx="19" cy="31" r="11.5"/><circle cx="32" cy="22" r="12.5"/><circle cx="45" cy="31" r="11.5"/>
+    <circle cx="23" cy="42" r="11.5"/><circle cx="41" cy="42" r="11.5"/><circle cx="32" cy="34" r="13.5"/>
+  </g>
+  <g fill="#fbfaf5">
+    <circle cx="19" cy="31" r="10"/><circle cx="32" cy="22" r="11"/><circle cx="45" cy="31" r="10"/>
+    <circle cx="23" cy="42" r="10"/><circle cx="41" cy="42" r="10"/><circle cx="32" cy="34" r="12"/>
+  </g>
+  <!-- ears and face -->
+  <ellipse cx="21.5" cy="34" rx="6" ry="2.8" transform="rotate(-18 21.5 34)" fill="#3a3330"/>
+  <ellipse cx="42.5" cy="34" rx="6" ry="2.8" transform="rotate(18 42.5 34)" fill="#3a3330"/>
+  <ellipse cx="32" cy="38" rx="8.2" ry="10.5" fill="#3a3330"/>
+  <ellipse cx="32" cy="45" rx="4.5" ry="3" fill="#4a423e"/>
+  <!-- wool tuft on the head -->
+  <circle cx="28.5" cy="28" r="4.2" fill="#fbfaf5"/><circle cx="35.5" cy="28" r="4.2" fill="#fbfaf5"/><circle cx="32" cy="26" r="4.2" fill="#fbfaf5"/>
+  <!-- eyes -->
+  <circle cx="28.3" cy="36.5" r="2.3" fill="#fff"/><circle cx="35.7" cy="36.5" r="2.3" fill="#fff"/>
+  <circle cx="28.8" cy="37" r="1.2" fill="#111"/><circle cx="35.2" cy="37" r="1.2" fill="#111"/>
+</svg>

@@ -251,7 +251,7 @@
       resume: 'RESUME GAME', newGame: 'NEW GAME', welcomeBack: (d) => `Welcome back! Day ${d}.`,
       savedHint: (d, n) => `ENTER: resume (day ${d}, ${n} sheep)  \u00B7  N: new game`,
       custom: (n) => `(${n} custom setting${n > 1 ? 's' : ''})`,
-      wolvesExample: (n) => [`6 sheep: about ${n} wolves at night,`, 'half as many by day.'],
+      wolvesExample: (n) => [`9 sheep: about ${n} wolves at night,`, 'half as many by day.'],
       difficulty: ['EASY', 'NORMAL', 'HARD', 'BRUTAL'],
       rules: [
         'Sheep run away from your Saint Bernard: use that to herd them.',
@@ -320,7 +320,7 @@
       resume: 'WEITERSPIELEN', newGame: 'NEUES SPIEL', welcomeBack: (d) => `Willkommen zurück! Tag ${d}.`,
       savedHint: (d, n) => `ENTER: weiter (Tag ${d}, ${n === 1 ? '1 Schaf' : n + ' Schafe'})  \u00B7  N: neues Spiel`,
       custom: (n) => `(${n} eigene Einstellung${n > 1 ? 'en' : ''})`,
-      wolvesExample: (n) => [`6 Schafe: etwa ${n} Wölfe nachts,`, 'tagsüber halb so viele.'],
+      wolvesExample: (n) => [`9 Schafe: etwa ${n} Wölfe nachts,`, 'tagsüber halb so viele.'],
       difficulty: ['LEICHT', 'NORMAL', 'SCHWER', 'BRUTAL'],
       rules: [
         'Die Schafe laufen vor deinem Bernhardiner weg: so treibst du sie.',
@@ -1766,10 +1766,12 @@
   // ---------------------------------------------------------------------------
   // Wolves
   // ---------------------------------------------------------------------------
-  // N // 2 wolves for N sheep, scaled by the player's wolf setting,
-  // then randomly +/- 20% (at least one).
+  // perSheep x N^power wolves for N sheep (default: the square root, so a bigger
+  // flock brings more wolves, but fewer per sheep), scaled by the player's wolf
+  // setting, then randomly +/- randomness (at least one).
   function packBase(nSheep) {
-    return Math.floor(nSheep / 2) * (1 + state.wolfAdj / 100);
+    const P = CFG.pack;
+    return P.perSheep * Math.pow(Math.max(0, nSheep), P.power) * (1 + state.wolfAdj / 100);
   }
   function packSize(nSheep) {
     const f = 1 + rand(-CFG.pack.randomness, CFG.pack.randomness);
@@ -1787,7 +1789,7 @@
 
   function scheduleDayWolves() {
     if (state.relax) { state.dayWolfAt = null; return; }
-    const chance = state.day < 2 ? 0 : Math.min(0.9, 0.35 + 0.1 * (state.day - 2));
+    const chance = state.day < 2 ? 0 : CFG.pack.dayChance;
     const se = season();
     state.dayWolfAt = Math.random() < chance ? rand(se.morning[1] + 0.5, se.evening[0] - 1.5) : null;
   }
@@ -5620,7 +5622,7 @@
     pixelText(name, R.x + R.w / 2, R.y + 262, 16, ncol);
 
     ctx.font = `20px ${TXT}`; ctx.fillStyle = '#f5efdc'; ctx.textAlign = 'center';
-    const ex = Math.max(1, Math.round(packBase(6)));
+    const ex = Math.max(1, Math.round(packBase(9)));
     const [exA, exB] = tr('wolvesExample', ex);
     ctx.fillText(exA, R.x + R.w / 2, R.y + 292);
     ctx.fillText(exB, R.x + R.w / 2, R.y + 312);
@@ -6088,7 +6090,7 @@
 
   // Handy for debugging in the browser console
   window.weide = {
-    bark, blizzardLevel, fogLevel, grassToSeek, nearPatch, flagWind, tractor, planTractor, farmer, dig, rake, deco, job, barrow, HUT, pickAppleTrees, segClear, routeTo, saveGame, resumeGame, get savedInfo() { return savedInfo; },
+    bark, packSize, scheduleDayWolves, blizzardLevel, fogLevel, grassToSeek, nearPatch, flagWind, tractor, planTractor, farmer, dig, rake, deco, job, barrow, HUT, pickAppleTrees, segClear, routeTo, saveGame, resumeGame, get savedInfo() { return savedInfo; },
     state, SEASONS, CLOCK, CFG,
     get sheep() { return sheep; }, get wolves() { return wolves; },
     get dog() { return dog; }, get patches() { return patches; }, mouse, bowl,

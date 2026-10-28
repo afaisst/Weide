@@ -4,6 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Weide – Detailed Gameplay</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
   <link href="fonts.css" rel="stylesheet">
   <style>
     :root {
@@ -233,8 +236,11 @@
     <div class="inner">
       <h3>HOW MANY</h3>
       <ul>
-        <li><b>Night pack</b> = (sheep ÷ 2, rounded down) × (1 + wolf setting), then randomly ±{{pct:CFG.pack.randomness}}%, at least 1. They arrive a few seconds apart.</li>
-        <li><b>Day attacks</b> start on day 2: 35% chance on day 2, +10% per day, up to 90%. A day pack is about {{pct:CFG.pack.dayFraction}}% of the night pack.</li>
+        <li><b>Night pack</b> = {{CFG.pack.perSheep}} × sheep<sup>{{CFG.pack.power}}</sup> × (1 + wolf setting), then randomly ±{{pct:CFG.pack.randomness}}%, at least 1.
+          With power 0.5 this is the square root: a bigger flock brings more wolves, but fewer wolves per sheep.
+          On the normal setting (before the random part): 2 sheep → {{wolves:2}}, 4 → {{wolves:4}}, 9 → {{wolves:9}}, 16 → {{wolves:16}}, 25 → {{wolves:25}}, 36 → {{wolves:36}} wolves.
+          They arrive a few seconds apart.</li>
+        <li><b>Day attacks</b> start on day 2: every day there is a {{pct:CFG.pack.dayChance}}% chance that a pack comes during the day. A day pack is about {{pct:CFG.pack.dayFraction}}% of the night pack.</li>
       </ul>
       <h3>BEHAVIOUR</h3>
       <ul>
@@ -372,6 +378,9 @@
         <tr><td><code>biteRate</code></td><td>{{CFG.wolf.biteRate}}</td><td>Sheep health % per second of contact</td></tr>
         <tr><td><code>attackRange</code> / <code>attackChance</code></td><td>{{CFG.wolf.attackRange}} / {{CFG.wolf.attackChance}}</td><td>Distance and chance per second to attack the dog</td></tr>
         <tr><td><code>dogBite</code></td><td>{{CFG.wolf.dogBite}}</td><td>Dog stamina % lost per bite</td></tr>
+        <tr><td><code>pack.perSheep</code></td><td>{{CFG.pack.perSheep}}</td><td>Night pack = this × sheep<sup>power</sup></td></tr>
+        <tr><td><code>pack.power</code></td><td>{{CFG.pack.power}}</td><td>How fast the pack grows with the flock: 0.5 = square root, 1 = in proportion</td></tr>
+        <tr><td><code>pack.dayChance</code></td><td>{{CFG.pack.dayChance}}</td><td>Chance of a day attack (each day from day 2)</td></tr>
         <tr><td><code>pack.randomness</code></td><td>{{CFG.pack.randomness}}</td><td>Pack size varies ±{{pct:CFG.pack.randomness}}%</td></tr>
         <tr><td><code>pack.dayFraction</code></td><td>{{CFG.pack.dayFraction}}</td><td>Day pack size relative to the night pack</td></tr>
         <tr><td><code>pack.stagger</code></td><td>{{CFG.pack.stagger}}</td><td>Seconds between arriving wolves</td></tr>
@@ -505,6 +514,7 @@
       daysec: (i) => Math.round((W.SEASONS[i].night - W.CLOCK.start) * W.CLOCK.daySecPerHour),
       nightsec: (i) => Math.round((W.CLOCK.end - W.SEASONS[i].night) * W.CLOCK.nightSecPerHour),
       bowlrate: () => round(W.CFG.dog.staminaRecover * W.CFG.bowl.rate),
+      wolves: (n) => Math.max(1, Math.round(W.CFG.pack.perSheep * Math.pow(+n, W.CFG.pack.power))),
     };
     const evaluate = (expr) => {
       const [a, b] = expr.split(':');

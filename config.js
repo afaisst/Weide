@@ -49,7 +49,12 @@ window.WEIDE = (() => {
              attackChance: 0.3, // ... with this chance per second (night: x1.5)
              dogBite: 15,       // stamina % the dog loses per bite
              biteRate: 45 }, // health % per second a wolf takes from a sheep it touches
-    pack:  { randomness: 0.2, dayFraction: 0.5, stagger: [2, 4] },
+    // wolves per night = perSheep x sheep^power  (power 0.5 = square root: 4 sheep -> 2, 9 -> 3, 16 -> 4, 25 -> 5)
+    //   then x (1 + wolf setting), randomly +/- randomness, at least 1
+    pack:  { perSheep: 1, power: 0.5, randomness: 0.2,
+             dayChance: 0.4,     // chance that a pack also comes during the day (from day 2 on)
+             dayFraction: 0.5,   // a day pack is this share of the night pack
+             stagger: [2, 4] },
     bowl: { food: 100, rate: 3, reach: 16, wolfSmell: 120 }, // wolves close to the bowl eat from it too // dog food bowl: refills stamina 3x faster than resting
     obstacles: { trees: [3, 5], rocks: [3, 6], lakes: [1, 3], wolfSeesHidden: 55 }, // wolves only spot sheep under a tree up close
     // streams near the corners, each with a wooden bridge
