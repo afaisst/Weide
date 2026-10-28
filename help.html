@@ -115,16 +115,17 @@
         <tr><th>Input</th><th>What it does</th></tr>
         <tr><td>Click / drag on the pasture</td><td>The dog runs to that spot (dragging keeps updating the target).</td></tr>
         <tr><td><span class="key">◀</span><span class="key">▲</span><span class="key">▼</span><span class="key">▶</span></td><td>Move the dog with the arrow keys. Let go and it stops.</td></tr>
-        <tr><td><span class="key">P</span> or <span class="key">ESC</span></td><td>Pause / continue. The game also pauses when you switch tabs.</td></tr>
-        <tr><td><span class="key">F</span></td><td>Fast-forward ×{{CFG.fastForward}} (day and evening only; turns off at nightfall).</td></tr>
+        <tr><td>PAUSE button (top right), <span class="key">P</span> or <span class="key">ESC</span></td><td>Pause. The pause screen has CONTINUE and EXIT GAME (saves the game and goes back to the start screen; key <span class="key">X</span>). <span class="key">P</span>/<span class="key">ESC</span> continue too. The game also pauses when you switch tabs.</td></tr>
+        <tr><td>WOOF! button (lower left corner) or <span class="key">W</span></td><td>The dog <b>barks</b> (see "The dog"). The button greys out while the dog gets its breath back.</td></tr>
+        <tr><td><b>▶▶</b> button (next to the time bar) or <span class="key">F</span></td><td>Fast-forward ×{{CFG.fastForward}} on/off (day and evening only; turns off at nightfall). The button is lit while it is on.</td></tr>
         <tr><td><span class="key">ENTER</span></td><td>Start the game (start screen) / continue (game-over screen).</td></tr>
         <tr><td><span class="key">◀</span> <span class="key">▶</span> on the start screen</td><td>Change the wolf setting.</td></tr>
         <tr><td><span class="key">▲</span> <span class="key">▼</span> on the start screen</td><td>Choose the start season.</td></tr>
         <tr><td>Flags (top right of the start screen) or <span class="key">L</span></td><td>Switch the game between English and German. Your browser remembers the choice. (This help page is in English only.)</td></tr>
         <tr><td><span class="key">S</span> on the start screen</td><td>Shuffle the map (same as the SHUFFLE MAP button).</td></tr>
-        <tr><td>EXIT button (top right)</td><td>Back to the start screen. You are asked first; <span class="key">Y</span>/<span class="key">ENTER</span> = yes, <span class="key">N</span>/<span class="key">ESC</span> = no.</td></tr>
       </table>
-      <p class="note">While running, the dog looks where it is going; when it stands still it looks at your mouse pointer.</p>
+      <p class="note">While running, the dog looks where it is going; when it stands still it looks at your mouse pointer.
+        On a tablet everything works by touch: tap or drag on the pasture, and use the ▶▶ and PAUSE buttons.</p>
     </div>
   </section>
 
@@ -134,7 +135,7 @@
       <h3>A DAY</h3>
       <ul>
         <li>The icon next to the clock shows the sun, a rising or setting sun (morning / evening), or the moon.</li>
-        <li>At <b>{{hour:CLOCK.start}}</b> the shepherd lets the flock out in front of the stable. The day ends at <b>{{hour:CLOCK.end}}</b>.</li>
+        <li>At <b>{{hour:CLOCK.start}}</b> the shepherd lets the flock out in front of the stable (sheep that spent the night outside are still where they were). The day ends at <b>{{hour:CLOCK.end}}</b>.</li>
         <li><b>Day</b>: graze, explore, chase off day wolves.</li>
         <li><b>Evening</b>: it gets dark; bring every sheep into the stable. Arrows at the door blink while sheep are still outside.</li>
         <li><b>Night</b>: at nightfall the wolf pack arrives. If every sheep is inside, the night passes 6× faster.</li>
@@ -151,7 +152,10 @@
         <tr><td>Wolves come</td><td>{{hour:SEASONS.0.night}}</td><td>{{hour:SEASONS.1.night}}</td><td>{{hour:SEASONS.2.night}}</td><td>{{hour:SEASONS.3.night}}</td></tr>
         <tr><td>Time until nightfall</td><td>≈ {{daysec:0}} s</td><td>≈ {{daysec:1}} s</td><td>≈ {{daysec:2}} s</td><td>≈ {{daysec:3}} s</td></tr>
         <tr><td>Night length</td><td>≈ {{nightsec:0}} s</td><td>≈ {{nightsec:1}} s</td><td>≈ {{nightsec:2}} s</td><td>≈ {{nightsec:3}} s</td></tr>
-        <tr><td>Looks</td><td>Fresh grass, lots of flowers, blossoms on the trees</td><td>Classic green alp</td><td>Golden grass, yellow and orange trees, fallen and falling leaves</td><td>Snow, bare trees, frozen lakes, snowy rocks, snowfall (different every day: none, light, moderate or heavy), a gloomy sky all day (darker while it snows), frozen streams you can walk across, footprints in the snow that fade after ~10 s</td></tr>
+        <tr><td>Looks</td><td>Fresh grass, lots of flowers, blossoms on the trees</td><td>Classic green alp</td><td>Golden grass, yellow and orange trees, fallen and falling leaves. On {{CFG.fog.daysPerSeason}} morning(s) <b>thick fog</b>: you can hardly see the sheep (only a little around the dog). After {{hour:CFG.fog.thickUntil}} it thins out, slowly at first and faster towards noon, and it is gone by {{hour:CFG.fog.clearBy}}</td><td>Snow, bare trees, frozen lakes, snowy rocks, snowfall (different every day: none, light, moderate or heavy), a gloomy sky all day (darker while it snows), frozen streams you can walk across, footprints in the snow that fade after ~10 s.
+          With a chance of {{pct:CFG.blizzard.chance}}% a winter has one <b>blizzard</b> day: storm and heavy snow all day, the
+          blowing snow hides the pasture (a little clearer around the dog), sheep outside get cold {{CFG.blizzard.cold}}× faster and move at
+          {{pct:CFG.blizzard.sheepSlow}}% speed, and the dog runs at {{pct:CFG.blizzard.dogSlow}}% speed</td></tr>
         <tr><td>Grass</td><td>Normal</td><td>Normal</td><td>Normal</td><td><b>{{less:CFG.grass.winterFactor}}% less food</b>: smaller, brown, muddy patches that empty quicker</td></tr>
         <tr><td>Ducks</td><td>Few, more each day (back from the south)</td><td>Most, with ducklings</td><td>Fewer each day (flying south)</td><td>None</td></tr>
         <tr><td>Gameplay</td><td>–</td><td>Hot: the dog tires {{more:CFG.summer.dogDrain}}% faster</td><td>–</td><td>Cold: sheep outside lose health all day (slowly), fast in the evening and very fast at night. Sheep are {{slow:CFG.winter.sheepSlow}}% slower in the snow. Bare trees give no cover.</td></tr>
@@ -172,6 +176,9 @@
         <li>During the day, a hungry calm sheep slowly <b>walks towards grass</b> it can find within <b>{{CFG.sheep.grassSeek}} px</b>
           (taking breaks on the way). It doesn't wade through a stream for it; frozen streams in winter are fine.</li>
         <li>A calm sheep within <b>{{CFG.sheep.grassAttract}} px</b> of grass walks onto it and stays there.</li>
+        <li>The pull of a patch <b>scales with how much grass is left</b>: a full patch draws sheep from the whole distance,
+          a half-eaten one only from half as far, and so on. Sheep prefer fuller patches. An eaten-up patch
+          (less than 6% left) draws no one any more.</li>
         <li>During the <b>day</b>, sheep in the stable walk back out by themselves.</li>
         <li>In the <b>evening and at night</b>, every <b>fully fed</b> sheep walks back to the stable by itself at its normal pace,
           from anywhere on the pasture (over a bridge if it is across a stream). Hungry sheep keep eating or stroll around:
@@ -207,8 +214,15 @@
       <ul>
         <li>Top speed {{CFG.dog.speed}}. Running costs <b>stamina</b> ({{CFG.dog.staminaDrain}}% per second at full speed, {{more:CFG.summer.dogDrain}}% more in summer). Standing still restores {{CFG.dog.staminaRecover}}% per second.</li>
         <li>Below <b>{{CFG.dog.tiredAt}}%</b> stamina the dog runs at {{pct:CFG.dog.tiredSpeed}}% speed (and pants); below <b>{{CFG.dog.exhaustedAt}}%</b> only at {{pct:CFG.dog.exhaustedSpeed}}%, and with no stamina left at all only at {{pct:CFG.dog.emptySpeed}}%, slower than sheep and wolves.</li>
+        <li>The dog is called <b>{{CFG.dog.name}}</b> (you can rename it below, under "Tuning the game"). It has its own <b>hut</b> with its name on it (left, below the flag). Send it in and let it rest: it falls asleep (<b>Zzzzzz</b>),
+          its nose peeking out of the door, and gets its stamina back twice as fast. Move it out again to wake it up.</li>
         <li>The <b>food bowl</b> right of the stable restores stamina <b>{{CFG.bowl.rate}}× faster</b> ({{bowlrate}}% per second). The bowl holds {{CFG.bowl.food}}%, and it empties by the same amount the dog gains. It is refilled every morning.</li>
         <li>A wolf may bite the dog: <b>−{{CFG.wolf.dogBite}}% stamina</b> per bite.</li>
+        <li><b>Barking</b> (<span class="key">W</span> or the WOOF! button): for {{CFG.dog.barkTime}} s the dog reaches further.
+          Sheep move away from up to {{CFG.dog.barkSheep}}× the usual distance, and wolves keep away from up to
+          {{CFG.dog.barkWolf}}× their usual distance and <b>don't attack the dog</b> (an attack under way is broken off).
+          Every sheep out on the pasture answers with a "Bahh!", which helps to find them in the fog.
+          After a bark the dog needs {{CFG.dog.barkCooldown}} s before it can bark again.</li>
         <li>When bored (standing still 4–8 s) the dog chases its tail or rolls on its back. Click or press a key to snap it out.</li>
       </ul>
     </div>
@@ -247,7 +261,7 @@
           Each stream has a <b>wooden bridge</b>: herd the sheep across it to keep them moving. Calm sheep don't wade in by themselves.
           Sometimes a grass patch grows on the far side of a stream. In winter the streams freeze, and everyone can walk straight across.</li>
         <li><b>Trees</b> ({{range:CFG.obstacles.trees}}), <b>rocks</b> ({{range:CFG.obstacles.rocks}}) and <b>lakes</b> ({{range:CFG.obstacles.lakes}}) are placed randomly every new game. Trunks, rocks and lakes block everyone. The dog and wolves steer around them; sheep just slide along.</li>
-        <li><b>The stable</b> has a roof. It turns see-through while sheep (or the dog) are inside. Two lamps next to the door switch on when it gets dark.</li>
+        <li><b>The stable</b> has a roof. It turns see-through while sheep (or the dog) are inside. Two lamps next to the door switch on when it gets dark, and on snowy winter days they stay on all day.</li>
         <li><b>Ducks</b> and <b>bees</b> (spring and summer, around the trees) are just for fun. In fall the wind blows the fallen leaves around.</li>
         <li><b>The farmer's tractor</b>: on {{CFG.tractor.daysPerSeason}} day(s) per season the gate in the top fence opens at
           <b>{{hour:CFG.tractor.arrive}}</b>, and the tractor drives in and parks on its tracks next to the stable. It backs out
@@ -257,11 +271,22 @@
             <li>It honks at animals in its way and waits until they move. Sheep within {{CFG.tractor.scareRadius}} px of a moving tractor step aside.</li>
             <li><b>Wolves keep {{CFG.tractor.wolfFear}} px away</b> from it, so the spot next to the tractor (and the dog's bowl) is safe that day.</li>
             <li>The gate is open, but the sheep can't leave the pasture.</li>
-            <li><b>The farmer</b> gets off and walks over the patio into the stable. After a while he comes out and <b>digs</b> a hole
-              in front of the stable, then sits on the <b>bench</b> next to the patio with a beer. About {{CFG.farmer.walkBack}} hour before
-              the tractor leaves he walks back and drives off. In <b>winter</b> it's too cold for that: he soon comes out and
-              <b>shovels the patio almost clear of snow</b>, strip by strip, pushing the snow to the sides, and then goes back
-              inside (you'll see his boot prints in the snow). By the next morning the patio is snowed over again. Sheep within {{CFG.farmer.sheepRadius}} px make way for him, and <b>wolves keep {{CFG.farmer.wolfFear}} px away</b>.
+            <li><b>The farmer</b> gets off and walks over the patio into the stable. After a while he comes out for the
+              <b>job of the day</b>, and about {{CFG.farmer.walkBack}} hour before the tractor leaves he walks back and drives off.
+              He has <b>two jobs per season</b>, each on its own random day (so with {{CLOCK.seasonDays}}-day seasons, one day has no tractor):
+              <ul>
+                <li><b>Spring</b>: a beer on the bench next to the patio, or he digs five holes below the patio and
+                  <b>plants flowers</b>. They sprout, bud and bloom over the next days, wilt in summer, dry up in fall and are gone in winter.</li>
+                <li><b>Summer</b>: a beer on the bench, or he <b>mows the lawn</b> in stripes on a piece of meadow near the patio
+                  (never on the sheep's grass patches). The stripes fade as the grass grows back.</li>
+                <li><b>Fall</b>: he <b>rakes the leaves</b> off the patio into heaps (more leaves land there every night), or he goes
+                  <b>apple picking</b> with his wheelbarrow at the 1–3 nearest trees (within {{CFG.farmer.appleRadius}} px of the stable,
+                  without wading through a stream) and wheels the apples into the stable. With no apple tree close enough he rakes instead.</li>
+                <li><b>Winter</b>: he <b>shovels the patio</b> almost clear of snow (it's snowed over again the next morning), or he
+                  <b>builds a snowman</b> next to the patio: three rolled snowballs, coal eyes, a carrot nose, stick arms and a red scarf.
+                  It stays all winter and melts on the first day of spring. You'll see his boot prints and the snowball tracks in the snow.</li>
+              </ul>
+              Sheep within {{CFG.farmer.sheepRadius}} px make way for him, and <b>wolves keep {{CFG.farmer.wolfFear}} px away</b>.
               When the dog comes within {{CFG.farmer.petRadius}} px, it wags its tail and gets a pat.</li>
           </ul></li>
       </ul>
@@ -280,11 +305,11 @@
       <p><b>Relax mode</b> (button left of START GAME, or the <b>R</b> key): no wolves at all, neither by day nor at night.
         Just herding for fun. Everything else stays the same: the sheep still need grass, lambs are still born,
         and sheep left outside at night still get cold.</p>
-      <p><b>Saving</b>: when you leave a game with <b>EXIT</b> (or close the browser tab), the game is saved in your browser.
+      <p><b>Saving</b>: when you leave a game with <b>PAUSE → EXIT GAME</b> (or close the browser tab), the game is saved in your browser.
         The game is also saved every morning. The start screen then shows <b>RESUME GAME</b> (or press ENTER) next to <b>NEW GAME</b> (or press N).
         A resumed game keeps its own map, wolf, relax and season settings; the options on the start screen are for new games.
         There is one saved game: exiting a new game replaces it, and when a game is over its save is deleted.</p>
-      <p class="note">Your browser remembers the wolf, relax and season settings.</p>
+      <p class="note">Your browser remembers the wolf and season settings. Relax mode is always off when you open the game.</p>
     </div>
   </section>
 
@@ -311,12 +336,16 @@
       <table>
         <tr><th>Setting</th><th>Value</th><th>Meaning</th></tr>
         <tr><th colspan="3">Dog: <code>CFG.dog</code></th></tr>
+        <tr><td><code>name</code></td><td>{{CFG.dog.name}}</td><td>The dog's name: it's on the hut, and the farmer calls the dog that (up to 14 letters)</td></tr>
         <tr><td><code>speed</code></td><td>{{CFG.dog.speed}}</td><td>Top running speed</td></tr>
         <tr><td><code>staminaDrain</code></td><td>{{CFG.dog.staminaDrain}}</td><td>Stamina % lost per second at full speed</td></tr>
         <tr><td><code>staminaRecover</code></td><td>{{CFG.dog.staminaRecover}}</td><td>Stamina % gained per second standing still</td></tr>
         <tr><td><code>tiredAt</code> / <code>tiredSpeed</code></td><td>{{CFG.dog.tiredAt}} / {{CFG.dog.tiredSpeed}}</td><td>Below {{CFG.dog.tiredAt}}% stamina run at {{pct:CFG.dog.tiredSpeed}}% speed</td></tr>
         <tr><td><code>exhaustedAt</code> / <code>exhaustedSpeed</code></td><td>{{CFG.dog.exhaustedAt}} / {{CFG.dog.exhaustedSpeed}}</td><td>Below {{CFG.dog.exhaustedAt}}% stamina run at {{pct:CFG.dog.exhaustedSpeed}}% speed</td></tr>
         <tr><td><code>emptySpeed</code></td><td>{{CFG.dog.emptySpeed}}</td><td>Speed with no stamina left at all ({{pct:CFG.dog.emptySpeed}}%)</td></tr>
+        <tr><td><code>barkTime</code> / <code>barkCooldown</code></td><td>{{CFG.dog.barkTime}} / {{CFG.dog.barkCooldown}}</td><td>A bark lasts this long (s); the next bark is possible after this long (s)</td></tr>
+        <tr><td><code>barkSheep</code></td><td>{{CFG.dog.barkSheep}}</td><td>While barking, sheep move away from up to dogRadius × this</td></tr>
+        <tr><td><code>barkWolf</code></td><td>{{CFG.dog.barkWolf}}</td><td>While barking, wolves keep away from up to fearRadius × this (and don't attack)</td></tr>
 
         <tr><th colspan="3">Sheep: <code>CFG.sheep</code></th></tr>
         <tr><td><code>dogRadius</code></td><td>{{CFG.sheep.dogRadius}}</td><td>Sheep move away from the dog inside this distance</td></tr>
@@ -363,7 +392,7 @@
         <tr><td><code>obstacles.wolfSeesHidden</code></td><td>{{CFG.obstacles.wolfSeesHidden}}</td><td>Wolves spot sheep under a tree only this close</td></tr>
 
         <tr><th colspan="3">Tractor and farmer: <code>CFG.tractor</code>, <code>CFG.farmer</code></th></tr>
-        <tr><td><code>tractor.daysPerSeason</code></td><td>{{CFG.tractor.daysPerSeason}}</td><td>Tractor days per season (0 = never)</td></tr>
+        <tr><td><code>tractor.daysPerSeason</code></td><td>{{CFG.tractor.daysPerSeason}}</td><td>Tractor days per season: the farmer has 2 jobs per season (0 = never)</td></tr>
         <tr><td><code>tractor.arrive</code></td><td>{{CFG.tractor.arrive}}</td><td>Drives in at {{hour:CFG.tractor.arrive}}</td></tr>
         <tr><td><code>tractor.leaveEarly</code></td><td>{{CFG.tractor.leaveEarly}}</td><td>Leaves this many hours before evening starts</td></tr>
         <tr><td><code>tractor.speed</code></td><td>{{CFG.tractor.speed}}</td><td>Driving speed (backs out a bit slower)</td></tr>
@@ -375,9 +404,22 @@
         <tr><td><code>farmer.wolfFear</code></td><td>{{CFG.farmer.wolfFear}}</td><td>Wolves keep this far away from the farmer</td></tr>
         <tr><td><code>farmer.petRadius</code></td><td>{{CFG.farmer.petRadius}}</td><td>The dog this close gets a pat</td></tr>
         <tr><td><code>farmer.shovelSpeed</code></td><td>{{CFG.farmer.shovelSpeed}}</td><td>Winter: how fast he shovels the patio (px per second)</td></tr>
+        <tr><td><code>farmer.rakeSpeed</code></td><td>{{CFG.farmer.rakeSpeed}}</td><td>Fall: how fast he rakes the leaves off the patio (px per second)</td></tr>
+        <tr><td><code>farmer.mowSpeed</code></td><td>{{CFG.farmer.mowSpeed}}</td><td>Summer: how fast he mows the lawn (px per second)</td></tr>
+        <tr><td><code>farmer.appleRadius</code></td><td>{{CFG.farmer.appleRadius}}</td><td>Fall: apple trees this close to the stable get picked (at most 3)</td></tr>
+        <tr><td><code>farmer.pickTime</code></td><td>{{CFG.farmer.pickTime}}</td><td>Fall: seconds to pick one apple tree</td></tr>
         <tr><td><code>farmer.walkBack</code></td><td>{{CFG.farmer.walkBack}}</td><td>Hours before the tractor leaves that he walks back to it</td></tr>
 
-        <tr><th colspan="3">Seasons &amp; time: <code>CFG.summer</code>, <code>CFG.winter</code>, <code>SEASONS</code>, <code>CLOCK</code></th></tr>
+        <tr><th colspan="3">Seasons &amp; time: <code>CFG.summer</code>, <code>CFG.winter</code>, <code>CFG.fog</code>, <code>CFG.blizzard</code>, <code>SEASONS</code>, <code>CLOCK</code></th></tr>
+        <tr><td><code>blizzard.chance</code></td><td>{{CFG.blizzard.chance}}</td><td>Chance that a winter has a blizzard day</td></tr>
+        <tr><td><code>blizzard.cold</code></td><td>{{CFG.blizzard.cold}}</td><td>In the blizzard, sheep outside get cold this many times faster</td></tr>
+        <tr><td><code>blizzard.sheepSlow</code> / <code>dogSlow</code></td><td>{{CFG.blizzard.sheepSlow}} / {{CFG.blizzard.dogSlow}}</td><td>Speed of sheep outside / of the dog in the blizzard</td></tr>
+        <tr><td><code>blizzard.whiteout</code></td><td>{{CFG.blizzard.whiteout}}</td><td>How much the blowing snow hides the pasture (0–1)</td></tr>
+        <tr><td><code>blizzard.clearView</code></td><td>{{CFG.blizzard.clearView}}</td><td>In the blizzard you see a bit more within this distance around the dog (px)</td></tr>
+        <tr><td><code>fog.daysPerSeason</code></td><td>{{CFG.fog.daysPerSeason}}</td><td>Foggy mornings per fall</td></tr>
+        <tr><td><code>fog.thick</code></td><td>{{CFG.fog.thick}}</td><td>How thick the fog is early in the morning (0–1)</td></tr>
+        <tr><td><code>fog.thickUntil</code> / <code>clearBy</code></td><td>{{CFG.fog.thickUntil}} / {{CFG.fog.clearBy}}</td><td>Thick until {{hour:CFG.fog.thickUntil}}, then thins out; gone by {{hour:CFG.fog.clearBy}}</td></tr>
+        <tr><td><code>fog.clearView</code></td><td>{{CFG.fog.clearView}}</td><td>In the fog you can see this far around the dog (px)</td></tr>
         <tr><td><code>summer.dogDrain</code></td><td>{{CFG.summer.dogDrain}}</td><td>Dog stamina drain multiplier in summer</td></tr>
         <tr><td><code>winter.dayDrain</code></td><td>{{CFG.winter.dayDrain}}</td><td>Health % per second for sheep outside on a winter day</td></tr>
         <tr><td><code>winter.eveningDrain</code></td><td>{{CFG.winter.eveningDrain}}</td><td>… in a winter evening</td></tr>
@@ -436,6 +478,7 @@
     function valid(path, v) {
       const d = get(defaults, path);
       if (typeof d === 'number') return Number.isFinite(v) && v >= 0;
+      if (typeof d === 'string') return typeof v === 'string' && v.trim().length > 0 && v.length <= 14;
       return Array.isArray(d) && Array.isArray(v) && v.length === d.length && v.every((x) => Number.isFinite(x) && x >= 0);
     }
 
@@ -497,7 +540,7 @@
           const path = m[1].trim();
           const d = get(defaults, path);
           const inp = document.createElement('input');
-          inp.className = 'cfg' + (Array.isArray(d) ? (d.length > 2 ? ' xwide' : ' wide') : '');
+          inp.className = 'cfg' + (typeof d === 'string' || Array.isArray(d) ? (Array.isArray(d) && d.length <= 2 ? ' wide' : ' xwide') : '');
           inp.dataset.path = path;
           inp.title = 'config.js: ' + showValue(d);
           inp.spellcheck = false;
@@ -520,8 +563,8 @@
     }
     function onEdit(inp) {
       const p = inp.dataset.path, d = get(defaults, p);
-      const raw = inp.value.replace(/[\[\]\s]/g, '');
-      const v = Array.isArray(d) ? raw.split(',').map(Number) : Number(raw);
+      const raw = typeof d === 'string' ? inp.value.trim() : inp.value.replace(/[\[\]\s]/g, '');
+      const v = typeof d === 'string' ? raw : Array.isArray(d) ? raw.split(',').map(Number) : Number(raw);
       if (raw === '' || !valid(p, v)) { inp.classList.add('bad'); return; }
       setPath(root, p, clone(v));
       if (same(v, d)) delete overrides[p]; else overrides[p] = v;

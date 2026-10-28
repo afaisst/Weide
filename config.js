@@ -10,16 +10,22 @@
 window.WEIDE = (() => {
   const CFG = {
     dog:   {
+      name: 'Barry',         // the dog's name (on its hut; the farmer calls it that too)
       r: 11, speed: 190,
       staminaDrain: 6,       // % per second when running at full speed
       staminaRecover: 6,     // % per second when standing still
       tiredAt: 30, tiredSpeed: 0.7,          // below 30% stamina: 70% speed
       exhaustedAt: 10, exhaustedSpeed: 0.45, // below 10% stamina: 45% speed
       emptySpeed: 0.25,                      // no stamina left at all: 25% speed
+      // barking (key W or the WOOF button): for a moment the dog reaches further
+      barkTime: 2,           // seconds a bark lasts
+      barkCooldown: 2.5,     // seconds until it can bark again
+      barkSheep: 1.6,        // sheep move away from up to dogRadius x this
+      barkWolf: 1.8,         // wolves keep away from up to fearRadius x this, and don't attack the dog
     },
     sheep: {
       r: 10,
-      dogRadius: 130,        // sheep start to move away from the dog inside this distance
+      dogRadius: 100,        // sheep start to move away from the dog inside this distance
       wolfRadius: 170,       // ... and panic when a wolf is this close
       maxSpeed: 100,         // slower than the wolf (125)!
       grazeSpeed: 22,        // walking speed when roaming on their own
@@ -52,7 +58,7 @@ window.WEIDE = (() => {
                sheepSpeed: 0.35, dogSpeed: 0.6, wolfSpeed: 0.6,   // speed while wading through the water
                patchAcross: 0.6 },   // chance that a grass patch grows on the far side of a stream
     // the farmer's tractor: on some days the gate opens and it parks along the stable
-    tractor: { daysPerSeason: 1,  // tractor days per season (0 = never)
+    tractor: { daysPerSeason: 2,  // tractor days per season: the farmer has 2 jobs per season (0 = never)
                arrive: 6.5,       // clock hour it drives in
                leaveEarly: 1.5,   // leaves this many hours before evening starts
                speed: 40,         // driving speed (backs out slower)
@@ -64,16 +70,33 @@ window.WEIDE = (() => {
               wolfFear: 120,      // wolves keep this far away from him
               petRadius: 32,      // the dog this close gets a pat (and wags its tail)
               walkBack: 1,        // starts walking back to the tractor this many hours before it leaves
-              shovelSpeed: 40 },  // winter: how fast he shovels the snow off the patio (px per second)
+              shovelSpeed: 40,    // winter: how fast he shovels the snow off the patio (px per second)
+              rakeSpeed: 30,      // fall: how fast he rakes the leaves off the patio (px per second)
+              mowSpeed: 26,       // summer: how fast he mows the lawn next to the patio (px per second)
+              appleRadius: 360,   // fall: apple trees this close to the stable get picked (at most 3)
+              pickTime: 4 },      // fall: seconds to pick one apple tree
+    // fall: thick fog on some mornings
+    fog: { daysPerSeason: 1,   // foggy mornings per fall (of the 3 days)
+           thick: 0.8,         // how thick it is in the early morning (0 .. 1)
+           thickUntil: 7.5,    // stays thick until this hour ...
+           clearBy: 13,        // ... then thins out and is gone by this hour
+           clearView: 90 },    // you can see a bit within this distance around the dog
+    // winter: on one day of a winter there may be a blizzard (all day)
+    blizzard: { chance: 0.8,     // chance that a winter has a blizzard day
+                cold: 3,         // sheep outside get cold this many times faster
+                sheepSlow: 0.8,  // sheep outside move at this speed (x the winter speed)
+                dogSlow: 0.85,   // the dog runs at this speed
+                whiteout: 0.5,   // how much the blowing snow hides the pasture (0 .. 1)
+                clearView: 90 }, // you see a bit within this distance around the dog
     fastForward: 4,          // speed multiplier while 'F' is on (daytime only)
     grass: { surplus: 1.3, minPatches: 3, maxPatches: 6, winterFactor: 0.85 }, // food in winter (0.85 = 15% less)
     summer: { dogDrain: 1.15 },                   // hot: the dog tires 15% faster
     winter: { dayDrain: 0.08, eveningDrain: 1.0, nightDrain: 1.5, // health % per second for sheep outside
-              gloom: 0.3,    // winter days are never fully bright
+              gloom: 0.35,    // winter days are never fully bright
               snowDark: [0, 0.17, 0.24, 0.5],  // extra darkness while it snows (none / light / moderate / heavy)
               sheepSlow: [0.85, 0.9],    // sheep move 10-15% slower in winter (random per sheep)
               // snowfall, picked at random every winter day: none / light / moderate / heavy
-              snowChance: [0.3, 0.35, 0.25, 0.1],   // chance of each kind of day
+              snowChance: [0.15, 0.25, 0.25, 0.3],   // chance of each kind of day
               snowFlakes: [0, 45, 150, 300] },      // number of snowflakes for each kind
   };
 
@@ -88,7 +111,7 @@ window.WEIDE = (() => {
   ];
   // The sheep come out at 5:30, the day ends at midnight.
   // Real seconds per clock hour: day and night run at different speeds.
-  const CLOCK = { start: 5.5, end: 24, daySecPerHour: 5.5, nightSecPerHour: 7, seasonDays: 3 };
+  const CLOCK = { start: 5.0, end: 24, daySecPerHour: 7, nightSecPerHour: 7, seasonDays: 3 };
 
   return { CFG, SEASONS, CLOCK };
 })();

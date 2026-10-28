@@ -21,8 +21,9 @@ or all ewes are gone.
 - Wolves may attack by day too. Chase them off before they bite.
 - A fully fed ram + a fully fed ewe in the stable = a lamb overnight. Lambs are small on their first day and need less food, grown up on their second day, and can have lambs themselves from their second night on.
 - Running tires the dog. Its food bowl next to the stable restores energy.
-- Seasons change every 3 days. Summer days are long, winter days short and cold!
-- Once a season the farmer's tractor drives in through the gate and parks next to the stable for the day. The farmer works around the stable, digs, has a beer on the bench (not in winter!), pats the dog, and wolves keep away from both!
+- Seasons change every 3 days. Summer days are long, winter days short and cold! In fall, one morning is thick with fog until noon. Most winters bring one blizzard day.
+- Twice a season the farmer's tractor drives in through the gate and parks next to the stable for the day. The farmer has a job for each day: a beer on the bench, planting flowers (spring), mowing the lawn (summer), raking leaves or picking apples with his wheelbarrow (fall), shovelling snow or building a snowman (winter). He pats the dog, and wolves keep away from him and the tractor!
+- The dog has its own hut: send it in and it falls asleep (Zzzzzz).
 - No rams or no ewes left = game over.
 
 ## Controls
@@ -30,10 +31,11 @@ or all ewes are gone.
 | Input | What it does |
 | --- | --- |
 | Click / drag on the pasture, or arrow keys | Move the dog |
-| `P` or `Esc` | Pause |
-| `F` | Fast-forward the day |
+| `PAUSE` button, `P` or `Esc` | Pause (the pause screen has `CONTINUE` and `EXIT GAME`) |
+| `▶▶` button or `F` | Fast-forward the day |
+| `WOOF!` button or `W` | Bark: sheep move away from further off and answer with a "Bahh!", wolves keep their distance |
 | `R` (start screen) or `RELAX MODE` button | Relax mode: no wolves, just herding |
-| `EXIT` button | Save the game and go back to the start screen (then `RESUME GAME` / Enter, or `NEW GAME` / N) |
+| `EXIT GAME` (pause screen) | Save the game and go back to the start screen (then `RESUME GAME` / Enter, or `NEW GAME` / N) |
 
 On the start screen you can set the number of **wolves** (−50% to +50%), choose the
 **start season**, and **shuffle the map** until you like it. Click the little flags in the top
