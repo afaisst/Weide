@@ -23,9 +23,9 @@
 <body>
   <canvas id="game"></canvas>
   <script>
-    // Load the tuning (config.js) and then the game (game.js), always the newest
+    // Load the tuning (config.js), the recorded sounds, the sounds (sound.js) and then the game (game.js), always the newest
     // versions (avoids the browser using an old cached copy).
-    for (const file of ['config.js', 'game.js']) {
+    for (const file of ['config.js', 'soundeffects/sounds.js', 'sound.js', 'game.js']) {
       const js = document.createElement('script');
       js.src = file + '?v=' + Date.now();
       js.async = false;               // keep the order: config first

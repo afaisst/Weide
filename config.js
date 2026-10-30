@@ -93,6 +93,16 @@ window.WEIDE = (() => {
                 dogSlow: 0.85,   // the dog runs at this speed
                 whiteout: 0.5,   // how much the blowing snow hides the pasture (0 .. 1)
                 clearView: 90 }, // you see a bit within this distance around the dog
+    // sounds: the dog hears everything - the closer a sound is to the dog, the louder it is,
+    // and it comes from the left or the right (key M or the megaphone button: sound on/off)
+    sound: { volume: 0.7,      // overall volume (0 .. 1)
+             halfDist: 180,    // a sound this far from the dog is half as loud (wolves howl 3x as far)
+             dog: 0.8, sheep: 0.7, wolf: 0.9, ducks: 0.6, bees: 0.3, birds: 0.6, tractor: 0.6, wind: 0.12,
+             windSnow: 2.5,    // the wind is up to this many times louder while it snows (heavy snowfall)
+             windBlizzard: 5,  // ... and this many times louder in a blizzard
+             crickets: 0.4,    // (summer evenings)
+             farmer: 0.6,      // his lawn mower and his beer bottle
+             water: 0.35 },    // the streams (only heard close to them)
     fastForward: 4,          // speed multiplier while 'F' is on (daytime only)
     grass: { surplus: 1.3, minPatches: 3, maxPatches: 6, winterFactor: 0.85 }, // food in winter (0.85 = 15% less)
     summer: { dogDrain: 1.15 },                   // hot: the dog tires 15% faster

@@ -35,6 +35,7 @@ or all ewes are gone.
 | `▶▶` button or `F` | Fast-forward the day |
 | `WOOF!` button or `W` | Bark: sheep move away from further off and answer with a "Bahh!", wolves keep their distance |
 | `R` (start screen) or `RELAX MODE` button | Relax mode: no wolves, just herding |
+| `M` or the megaphone button | Sound on/off (the closer a sound is to the dog, the louder it is) |
 | `EXIT GAME` (pause screen) | Save the game and go back to the start screen (then `RESUME GAME` / Enter, or `NEW GAME` / N) |
 
 On the start screen you can set the number of **wolves** (−50% to +50%), choose the
@@ -51,6 +52,8 @@ web browser.
 | `index.html` | The game page |
 | `game.js` | The game |
 | `config.js` | All the numbers you can tune (speeds, wolves, food, seasons, ...) |
+| `sound.js` | The sounds: most are made in the browser, some are recordings |
+| `soundeffects/` | The recordings (dog bark, sheep, wolves, ducks) and `sounds.js`, which packs them for the game. After adding or changing a file there, run `python3 soundeffects/make_sounds_js.py`. Only `sounds.js` is in git (the game needs nothing else); the sound files themselves are ignored |
 | `help.html` | Detailed gameplay and a settings editor |
 | `fonts.css` | The retro fonts (Press Start 2P and VT323, SIL Open Font License) |
 

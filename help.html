@@ -121,6 +121,7 @@
         <tr><td>PAUSE button (top right), <span class="key">P</span> or <span class="key">ESC</span></td><td>Pause. The pause screen has CONTINUE and EXIT GAME (saves the game and goes back to the start screen; key <span class="key">X</span>). <span class="key">P</span>/<span class="key">ESC</span> continue too. The game also pauses when you switch tabs.</td></tr>
         <tr><td>WOOF! button (lower left corner) or <span class="key">W</span></td><td>The dog <b>barks</b> (see "The dog"). The button greys out while the dog gets its breath back.</td></tr>
         <tr><td><b>▶▶</b> button (next to the time bar) or <span class="key">F</span></td><td>Fast-forward ×{{CFG.fastForward}} on/off (day and evening only; turns off at nightfall). The button is lit while it is on.</td></tr>
+        <tr><td>Megaphone button (next to ▶▶, or next to the flags on the start screen) or <span class="key">M</span></td><td>Sound on/off. Your browser remembers the choice.</td></tr>
         <tr><td><span class="key">ENTER</span></td><td>Start the game (start screen) / continue (game-over screen).</td></tr>
         <tr><td><span class="key">◀</span> <span class="key">▶</span> on the start screen</td><td>Change the wolf setting.</td></tr>
         <tr><td><span class="key">▲</span> <span class="key">▼</span> on the start screen</td><td>Choose the start season.</td></tr>
@@ -311,6 +312,36 @@
       <p><b>Relax mode</b> (button left of START GAME, or the <b>R</b> key): no wolves at all, neither by day nor at night.
         Just herding for fun. Everything else stays the same: the sheep still need grass, lambs are still born,
         and sheep left outside at night still get cold.</p>
+      <p><b>Sound</b> (megaphone button or the <b>M</b> key): the game is full of sounds. The dog's bark, the sheep, the wolves' howls, the ducks,
+        the crickets, the farmer's lawn mower, his beer bottle and the streams are recordings (the files in the <code>soundeffects</code> folder); everything else is made in your browser.
+        Your dog is the listener: the closer a sound is to the dog, the louder it is, and it comes from the left or the right
+        (with headphones or stereo speakers). A sound {{CFG.sound.halfDist}} px from the dog is half as loud; wolves' howls carry 3× as far.
+        Very handy in the fog: bark, and the flock answers with a "Bäh!" from wherever they are.</p>
+      <ul>
+        <li><b>Dog</b>: barks (WOOF!), woofs at the sheep, yelps when bitten, yawns when it wakes up, snores in its hut and pants when it is tired.</li>
+        <li><b>Sheep</b>: bleat now and then, panic when a wolf is near, shiver in the cold. Every sheep has its own voice: rams are lower, lambs high.
+          Sheep inside the stable sound muffled.</li>
+        <li><b>Wolves</b>: howl (louder at night, with an echo over the alp) and growl when they go for the dog.</li>
+        <li><b>Ducks</b>: a quiet quack now and then, the chatter of the whole flock when the dog comes close to a lake,
+          and loud quacking when the dog scares them.</li>
+        <li><b>Birds</b> (you hear them in the trees): every tree has its own kind of songbird. A dawn chorus in the morning,
+          lots of song in spring, less in summer and fall, and none in winter (no owl either). They go quiet when wolves are about
+          and in a blizzard. In spring a cuckoo calls, and at night an owl hoots.</li>
+        <li><b>Crickets</b>: chirp softly on summer evenings and through the night (they fade in during the first hour of the evening).</li>
+        <li><b>Bees</b>: buzz around the trees in spring and summer (by day, close to the tree only).</li>
+        <li><b>Tractor</b>: its diesel engine chugs while it drives, it honks, and it beeps when it backs out.</li>
+        <li><b>Farmer</b>: his lawn mower runs while he mows (summer), and you hear the beer bottle open when he sits down on the bench.</li>
+        <li><b>Streams</b>: babble quietly when the dog is close to one (not in winter: they are frozen).</li>
+        <li><b>Wind</b>: a breeze that swells with the gusts: calm in summer and on foggy mornings, stronger in fall and winter, much louder while it snows (the heavier the snowfall, the louder) and a howling gale in a blizzard.</li>
+      </ul>
+      <p class="note"><b>Your own recordings</b>: put sound files into the <code>soundeffects</code> folder, named
+        <code>dog_bark_1.mp3</code>, <code>sheep_1.mp3</code>, <code>sheep_2.mp3</code>, <code>wolf_1.mp3</code>, <code>duck_1.mp3</code>, <code>duck_ambient.mp3</code>, <code>crickets.mp3</code>, <code>grassmower.mp3</code>, <code>beeropen.mp3</code>, <code>stream.mp3</code> …
+        (a random one of each kind plays each time), then run <code>python3 soundeffects/make_sounds_js.py</code>.
+        It packs them into <code>soundeffects/sounds.js</code>, which the game loads (that also works when you open the game straight from your disk).
+        Silence at the start and end is cut off, and all recordings are made equally loud.
+        Sounds that play over and over (lawn mower, stream) are short clips made to loop without a seam; the full-length originals are kept in
+        <code>soundeffects/originals</code>. Only <code>sounds.js</code> is needed to play, so git ignores the sound files themselves.</p>
+      <p class="note">Browsers only allow sound after your first click or key press. On an iPhone/iPad, check that the ringer switch / volume is up.</p>
       <p><b>Saving</b>: when you leave a game with <b>PAUSE → EXIT GAME</b> (or close the browser tab), the game is saved in your browser.
         The game is also saved every morning. The start screen then shows <b>RESUME GAME</b> (or press ENTER) next to <b>NEW GAME</b> (or press N).
         A resumed game keeps its own map, wolf, relax and season settings; the options on the start screen are for new games.
@@ -445,6 +476,16 @@
         <tr><td><code>CLOCK.start</code> / <code>end</code></td><td>{{CLOCK.start}} / {{CLOCK.end}}</td><td>Sheep come out at {{hour:CLOCK.start}}, the day ends at {{hour:CLOCK.end}}</td></tr>
         <tr><td><code>CLOCK.daySecPerHour</code> / <code>nightSecPerHour</code></td><td>{{CLOCK.daySecPerHour}} / {{CLOCK.nightSecPerHour}}</td><td>Real seconds per clock hour</td></tr>
         <tr><td><code>CLOCK.seasonDays</code></td><td>{{CLOCK.seasonDays}}</td><td>Days per season</td></tr>
+        <tr><th colspan="3">Sound: <code>CFG.sound</code></th></tr>
+        <tr><td><code>sound.volume</code></td><td>{{CFG.sound.volume}}</td><td>Overall volume (0 … 1)</td></tr>
+        <tr><td><code>sound.halfDist</code></td><td>{{CFG.sound.halfDist}}</td><td>A sound this far from the dog is half as loud (px)</td></tr>
+        <tr><td><code>sound.dog</code> / <code>sheep</code> / <code>wolf</code></td><td>{{CFG.sound.dog}} / {{CFG.sound.sheep}} / {{CFG.sound.wolf}}</td><td>Volume of the dog, the sheep and the wolves</td></tr>
+        <tr><td><code>sound.ducks</code> / <code>bees</code> / <code>birds</code></td><td>{{CFG.sound.ducks}} / {{CFG.sound.bees}} / {{CFG.sound.birds}}</td><td>Volume of the ducks, the bees and the birds</td></tr>
+        <tr><td><code>sound.tractor</code> / <code>wind</code></td><td>{{CFG.sound.tractor}} / {{CFG.sound.wind}}</td><td>Volume of the tractor and the wind</td></tr>
+        <tr><td><code>sound.windSnow</code> / <code>windBlizzard</code></td><td>{{CFG.sound.windSnow}} / {{CFG.sound.windBlizzard}}</td><td>The wind is this many times louder in heavy snowfall / in a blizzard</td></tr>
+        <tr><td><code>sound.crickets</code></td><td>{{CFG.sound.crickets}}</td><td>Volume of the crickets (summer evenings and nights)</td></tr>
+        <tr><td><code>sound.farmer</code></td><td>{{CFG.sound.farmer}}</td><td>Volume of the farmer's lawn mower and beer bottle</td></tr>
+        <tr><td><code>sound.water</code></td><td>{{CFG.sound.water}}</td><td>Volume of the streams (only heard close to them)</td></tr>
         <tr><td><code>CFG.fastForward</code></td><td>{{CFG.fastForward}}</td><td>Speed of the <span class="key">F</span> fast-forward</td></tr>
       </table>
       </div>

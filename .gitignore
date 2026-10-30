@@ -3,3 +3,11 @@ Claude outputs/
 
 # macOS
 .DS_Store
+
+# sound recordings: the game only needs soundeffects/sounds.js (they are packed into it
+# by soundeffects/make_sounds_js.py), so the sound files themselves are not in git
+soundeffects/*.mp3
+soundeffects/*.wav
+soundeffects/*.ogg
+soundeffects/*.m4a
+soundeffects/originals/

@@ -241,7 +241,7 @@
       seasons: ['Spring', 'Summer', 'Fall', 'Winter'],
       subtitle: '~ sheep herding on a Swiss alp ~',
       howTo: 'HOW TO PLAY', options: 'OPTIONS', move: 'MOVE', keys: 'KEYS', or: 'or',
-      clickDrag: 'click / drag on the pasture', pause: 'pause', fastDay: 'fast-forward', barkKey: 'bark',
+      clickDrag: 'click / drag on the pasture', pause: 'pause', fastDay: 'fast-forward', barkKey: 'bark', soundKey: 'sound', soundOn: 'Sound on', soundOff: 'Sound off', soundBtnOn: 'SOUND', soundBtnOff: 'MUTE',
       wolves: 'WOLVES', startSeason: 'START SEASON', startGame: 'START GAME', shuffle: 'SHUFFLE MAP',
       relax: 'RELAX MODE', relaxOn: 'RELAX MODE', relaxLine: ['No wolves at all.', 'Just herding, for fun.'], relaxShort: 'relax mode',
       nightOutRelax: (out) => `Night falls — ${out} sheep still outside. Bring them in, it's cold!`,
@@ -310,7 +310,7 @@
       seasons: ['Frühling', 'Sommer', 'Herbst', 'Winter'],
       subtitle: '~ Schafe hüten auf einer Schweizer Alp ~',
       howTo: 'SO GEHT’S', options: 'OPTIONEN', move: 'LAUFEN', keys: 'TASTEN', or: 'oder',
-      clickDrag: 'klicken / ziehen auf der Weide', pause: 'Pause', fastDay: 'vorspulen', barkKey: 'bellen',
+      clickDrag: 'klicken / ziehen auf der Weide', pause: 'Pause', fastDay: 'vorspulen', barkKey: 'bellen', soundKey: 'Ton', soundOn: 'Ton an', soundOff: 'Ton aus', soundBtnOn: 'TON', soundBtnOff: 'STUMM',
       wolves: 'WÖLFE', startSeason: 'JAHRESZEIT', startGame: 'SPIEL STARTEN', shuffle: 'NEUE KARTE',
       relax: 'ENTSPANNT', relaxOn: 'ENTSPANNT', relaxLine: ['Gar keine Wölfe.', 'Einfach hüten, zum Spass.'], relaxShort: 'entspannt',
       nightOutRelax: (out) => `Die Nacht bricht herein — ${out === 1 ? '1 Schaf ist' : out + ' Schafe sind'} noch draußen. Bring sie rein, es ist kalt!`,
@@ -385,8 +385,140 @@
 
   // Animal sounds: floating text that rises and fades (like the ducks' quack)
   const SAY_COLOR = { dog: '#ffe0b0', sheep: '#ffffff', wolf: '#ffd23f', tractor: '#ffc2b0', farmer: '#c8e6ff' };
-  function say(ent, text, kind) {
+  function say(ent, text, kind, snd, opts) {
     addFloat(ent.x, ent.y, text, SAY_COLOR[kind] || '#fff6c8');
+    if (snd) sfx(snd, ent, opts);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Sounds (they are made in sound.js). The dog is the listener: the closer a
+  // sound is to the dog, the louder it is, and it comes from its left or right.
+  // ---------------------------------------------------------------------------
+  const SND = window.WeideSound ? window.WeideSound.create() : null;
+  if (!CFG.sound) CFG.sound = { volume: 0.7, halfDist: 180, dog: 0.8, sheep: 0.7, wolf: 0.9, ducks: 0.6, bees: 0.3, tractor: 0.6, wind: 0.12, windSnow: 2.5, windBlizzard: 5, birds: 0.6, crickets: 0.4, farmer: 0.6, water: 0.35 };
+  let soundPref = true;                        // sound on/off (key M, the megaphone buttons); remembered
+  try { soundPref = localStorage.getItem('weide.sound') !== '0'; } catch (e) { /* ignore */ }
+  const SFX_CAT = {
+    baa: 'sheep', baaPanic: 'sheep', baaCold: 'sheep',
+    bark: 'dog', woof: 'dog', woof2: 'dog', yelp: 'dog', yawn: 'dog',
+    howl: 'wolf', growl: 'wolf', quack: 'ducks', quackScared: 'ducks', honk: 'tractor', beep: 'tractor',
+    bird: 'birds', cuckoo: 'birds', owl: 'birds', beerOpen: 'farmer',
+  };
+  const SFX_FAR = { howl: 3, honk: 1.6, beep: 1.3, bird: 1.3, cuckoo: 2.5, owl: 2 };   // these carry further
+  // how loud something at p sounds to the dog: 1 right next to it, 1/2 at halfDist
+  function hearGain(p, far = 1) {
+    if (!dog) return 0;
+    const h = CFG.sound.halfDist * far, d = Math.hypot(p.x - dog.x, p.y - dog.y) / h;
+    return 1 / (1 + d * d);
+  }
+  const hearPan = (p) => (dog ? clamp((p.x - dog.x) / 380, -1, 1) * 0.85 : 0);   // left .. right
+  // each sheep has its own voice: rams lower, lambs high
+  const sheepPitch = (s) => (s.lamb ? 1.3 : s.sex === 'm' ? 0.88 : 1.04) * (s.voice || (s.voice = rand(0.93, 1.07)));
+  function sfx(name, p, opts = {}) {
+    if (!SND || !soundPref || state.screen !== 'play' || !p || !dog) return;
+    let g = (CFG.sound[SFX_CAT[name]] ?? 1) * (opts.gain ?? 1);
+    if (p !== dog) {
+      g *= hearGain(p, SFX_FAR[name] || 1);
+      if (inStable(p) && !inStable(dog)) g *= 0.45;          // muffled behind the stable walls
+    }
+    if (g < 0.01) return;
+    SND.play(name, { ...opts, gain: g, pan: p === dog ? 0 : hearPan(p), pitch: opts.pitch || 1 });
+  }
+  function setSound(on) {
+    soundPref = on;
+    try { localStorage.setItem('weide.sound', on ? '1' : '0'); } catch (e) { /* ignore */ }
+    if (SND) {
+      SND.unlock();
+      SND.setVolume(on ? CFG.sound.volume : 0);
+      if (on) SND.play('baa', { gain: 0.6, pitch: 1.04 });     // a little "Bäh" to show it's on
+    }
+    if (state.screen === 'play') showMsg(tr(on ? 'soundOn' : 'soundOff'), 1.6);
+  }
+  // browsers only allow sound after a click / key press
+  for (const ev of ['pointerdown', 'keydown', 'touchend']) {
+    window.addEventListener(ev, () => { if (SND && soundPref) SND.unlock(); }, { capture: true, passive: true });
+  }
+  // the steady sounds: wind, bees, the tractor's engine, the dog snoring and panting
+  function updateSound(dt) {
+    if (!SND) return;
+    const frozen = document.hidden || (state.screen === 'play' && (state.paused || state.confirmExit));
+    SND.setRunning(!frozen);
+    SND.setVolume(soundPref ? CFG.sound.volume : 0);
+    if (!SND.ready) return;
+    if (frozen || state.screen !== 'play' || !dog || !soundPref) { SND.silence(); return; }
+    const C = CFG.sound, t = state.t;
+    // wind: a breeze, stronger in the gusts; still on foggy mornings, a gale in a blizzard
+    const si = seasonIndex(), bz = blizzardLevel(), fog = fogLevel();
+    let w = [0.2, 0.12, 0.3, 0.24][si] + (si === 3 ? 0.06 * state.snowLevel : 0) + 0.5 * wind.gust * (si === 1 ? 0.6 : 1);
+    w = clamp(Math.max(w * (1 - 0.75 * fog), bz * (0.85 + 0.15 * wind.gust)), 0, 1);
+    // ... and much louder while it snows (heavier snow, louder), loudest in a blizzard
+    const snowing = si === 3 ? (state.snowLevel / 3) * (state.flurry || 1) : 0;
+    const louder = Math.max(1 + ((C.windSnow ?? 2.5) - 1) * snowing, 1 + ((C.windBlizzard ?? 5) - 1) * bz);
+    SND.loop('wind', Math.min(0.9, C.wind * w * louder), Math.cos(wind.dir) * 0.4, Math.min(1, w + 0.25 * snowing));
+    // bees: only heard close to their tree, and only in daylight
+    let bg = 0, bp = 0;
+    const day = 1 - clamp(rawDarkness(state.hour) * 4, 0, 1);
+    if (day > 0) for (const b of bees) { const g = hearGain(b, 0.3); bg += g; bp += g * hearPan(b); }
+    SND.loop('bees', C.bees * Math.min(1, bg) * day, bg ? bp / bg : 0);
+    // a lake full of ducks: you hear the whole flock chattering when the dog is close to it
+    let dn = null, dd = 1e9;
+    for (const d of ducks) { const q = Math.hypot(d.x - dog.x, d.y - dog.y); if (q < dd) { dd = q; dn = d; } }
+    // the streams babble when the dog is close to one (frozen and quiet in winter)
+    let wg = 0, wp = 0;
+    if (si !== 3) for (const st of streams) {
+      const q = streamNearest(st, dog.x, dog.y), d = Math.max(0, q.d - st.w / 2) / 50;   // half as loud 50 px from the bank
+      const g = d > 4 ? 0 : 1 / (1 + d * d);
+      if (g > wg) { wg = g; wp = hearPan(q); }
+    }
+    SND.loop('stream', (C.water ?? 0.35) * wg, wp, 0, 0.15);
+    // the farmer's lawn mower (summer), running while he mows
+    const mowing = farmerOut() && farmer.mode === 'mow';
+    SND.loop('mower', mowing ? (C.farmer ?? 0.6) * hearGain(farmer, 1.3) : 0, mowing ? hearPan(farmer) : 0, 0, 0.25);
+    // crickets: softly on summer evenings and through the night
+    const se = season(), crick = si === 1 ? clamp(state.hour - se.evening[0], 0, 1) : 0;
+    SND.loop('crickets', (C.crickets ?? 0.4) * crick, 0);
+    SND.loop('duckAmbient', dn ? (C.ducks ?? 0.6) * hearGain(dn, 0.6) * (0.4 + 0.6 * day) : 0, dn ? hearPan(dn) : 0);
+    // the tractor's engine (off while it is parked)
+    const T = tractor, tp = { x: GATE.cx, y: Math.max(T.y, -30) };
+    const eng = T.mode === 'in' || T.mode === 'out' ? 1 : T.mode === 'opening' || T.mode === 'closing' ? 0.6 : 0;
+    SND.loop('tractor', C.tractor * eng * hearGain(tp, 1.4), hearPan(tp), T.moving ? 1 : 0.15);
+    // the dog: snoring in its hut, panting when it is tired
+    const snore = dog.sleeping ? Math.pow(Math.max(0, Math.sin(t * TAU / 3.4)), 3) : 0;
+    SND.loop('snore', C.dog * 0.3 * snore, 0, 0, 0.03);
+    const tired = !dog.sleeping && dog.stamina < CFG.dog.tiredAt ? 1 - 0.6 * dog.stamina / CFG.dog.tiredAt : 0;
+    const pant = Math.pow(Math.abs(Math.sin(t * Math.PI * 3.2)), 4);
+    SND.loop('pant', C.dog * 0.22 * tired * pant, 0, 0, 0.012);
+    birdsSing(dt);
+  }
+
+  // Birds in the trees (you hear them, you don't see them): songbirds by day with a
+  // dawn chorus in the morning, lots in spring, fewer in summer and fall, none in winter, quiet when wolves are about;
+  // the cuckoo in spring; an owl at night. Each tree has its own kind of bird.
+  let birdT = 1, cuckooT = rand(8, 20), owlT = rand(6, 15);
+  function birdsSing(dt) {
+    if (!trees.length || isWinter()) return;          // winter: the birds have gone quiet (or south)
+    const si = seasonIndex(), se = season(), ph = phaseName();
+    const storm = blizzardLevel() > 0.3, fog = fogLevel(), wolvesAbout = wolves.length > 0;
+    const someTree = () => trees[Math.floor(Math.random() * trees.length)];
+    if (ph !== 'night' && !storm) {
+      birdT -= dt;
+      if (birdT <= 0) {
+        const dawn = state.hour < se.morning[1] + 2 ? 2 : 1;
+        const rate = [1, 0.8, 0.35, 0.12][si] * dawn * (ph === 'dusk' ? 0.4 : 1) * (wolvesAbout ? 0.3 : 1) * (1 - 0.6 * fog);
+        birdT = rand(1.5, 4) / Math.max(0.05, rate);
+        const t = someTree();
+        if (!t.bird) t.bird = { kind: Math.floor(Math.random() * 3), pitch: rand(0.88, 1.12) };
+        sfx('bird', t, { kind: t.bird.kind, pitch: t.bird.pitch * rand(0.97, 1.03) });
+      }
+    }
+    if (ph === 'day' && (si === 0 || (si === 1 && seasonDay() === 0)) && !wolvesAbout) {
+      cuckooT -= dt;
+      if (cuckooT <= 0) { cuckooT = rand(25, 60); sfx('cuckoo', someTree()); }
+    }
+    if (ph === 'night' && !storm) {
+      owlT -= dt;
+      if (owlT <= 0) { owlT = rand(18, 40); sfx('owl', someTree()); }
+    }
   }
 
   function showMsg(text, t = 3.5) { state.msg = { text, t, max: t }; }
@@ -743,6 +875,18 @@
       const dx = b.x - a.x, dy = b.y - a.y;
       const t = clamp(((x - a.x) * dx + (y - a.y) * dy) / (dx * dx + dy * dy), 0, 1);
       best = Math.min(best, Math.hypot(x - a.x - dx * t, y - a.y - dy * t));
+    }
+    return best;
+  }
+  // the closest point on the middle line of the stream (and how far it is)
+  function streamNearest(st, x, y) {
+    let best = { d: 1e9, x, y };
+    for (let i = 1; i < st.pts.length; i++) {
+      const a = st.pts[i - 1], b = st.pts[i];
+      const dx = b.x - a.x, dy = b.y - a.y;
+      const t = clamp(((x - a.x) * dx + (y - a.y) * dy) / (dx * dx + dy * dy), 0, 1);
+      const px = a.x + dx * t, py = a.y + dy * t, d = Math.hypot(x - px, y - py);
+      if (d < best.d) best = { d, x: px, y: py };
     }
     return best;
   }
@@ -1210,7 +1354,7 @@
         }
         d.tx = best.x; d.ty = best.y;
         d.dabbleT = 0;
-        if (Math.random() < 0.6) addFloat(d.x, d.y + 8, tr('quack2'), '#fff6c8');
+        if (Math.random() < 0.6) { addFloat(d.x, d.y + 8, tr('quack2'), '#fff6c8'); sfx('quackScared', d); }
       }
       d.scared = scared;
 
@@ -1221,7 +1365,7 @@
         d.nextT = rand(2, 6);
         if (Math.random() < 0.3 && d.kids.length === 0) d.dabbleT = rand(1.5, 3);   // head under water
         else { const q = randomWaterPoint(lake, 10); d.tx = q.x; d.ty = q.y; }
-        if (Math.random() < 0.08) addFloat(d.x, d.y + 8, tr('quack'), '#fff6c8');
+        if (Math.random() < 0.08) { addFloat(d.x, d.y + 8, tr('quack'), '#fff6c8'); sfx('quack', d); }
       }
       const want = d.dabbleT > 0 || dist2t < 3 ? 0 : scared ? 38 : 11;
       d.sp += (want - d.sp) * Math.min(1, 3 * dt);
@@ -1960,7 +2104,7 @@
         const W = CFG.winter;
         loss += (night ? W.nightDrain : prev === 'dusk' ? W.eveningDrain : W.dayDrain) * dt * (state.blizzard ? CFG.blizzard.cold : 1);
         if (prev !== 'day' && state.sheepTalkCD <= 0 && Math.random() < dt * 0.4) {
-          say(s, tr('brr'), 'sheep');
+          say(s, tr('brr'), 'sheep', 'baaCold', { pitch: sheepPitch(s) });
           state.sheepTalkCD = 2;
         }
       }
@@ -2039,7 +2183,7 @@
     if (state.screen !== 'play' || state.paused || !dog || (dog.barkCD || 0) > 0) return;
     dog.barkT = CFG.dog.barkTime; dog.barkCD = CFG.dog.barkCooldown;
     dog.sleeping = false; dog.hutT = 0; dog.trick = null; dog.idleT = 0;
-    say(dog, tr('bark'), 'dog');
+    say(dog, tr('bark'), 'dog', 'bark');
     dog.woofCD = Math.max(dog.woofCD, 1.5);
     // the flock answers: every sheep out on the pasture bleats once (handy in the fog!)
     for (const s of sheep) if (!inStable(s)) s.answerT = rand(0.2, 1.1);
@@ -2054,7 +2198,7 @@
       dog.hutT = (dog.hutT || 0) + dt;
       if (dog.hutT > 1.2 && !dog.sleeping) { dog.sleeping = true; dog.zzzT = 0.3; dog.trick = null; }
     } else {
-      if (dog.sleeping && dog.moving) say(dog, tr('yawn'), 'dog');
+      if (dog.sleeping && dog.moving) say(dog, tr('yawn'), 'dog', 'yawn');
       dog.hutT = 0; dog.sleeping = false;
     }
     if (dog.sleeping) {
@@ -2106,8 +2250,8 @@
         const wx = w.x - dog.x, wy = w.y - dog.y, wd = Math.hypot(wx, wy);
         if (wd < 230 && (wx * dog.vx + wy * dog.vy) / (wd * dsp) > 0.7) { toward = true; break; }
       }
-      if (toward) { say(dog, tr('woof2'), 'dog'); dog.woofCD = rand(3, 5); }
-      else if (dog.randWoofT <= 0) { say(dog, tr('woof'), 'dog'); dog.woofCD = 3; dog.randWoofT = rand(15, 35); }
+      if (toward) { say(dog, tr('woof2'), 'dog', 'woof2'); dog.woofCD = rand(3, 5); }
+      else if (dog.randWoofT <= 0) { say(dog, tr('woof'), 'dog', 'woof'); dog.woofCD = 3; dog.randWoofT = rand(15, 35); }
     }
 
     if (dog.trick) {
@@ -2126,7 +2270,7 @@
       if (dog.idleT >= dog.boredAt) {
         const type = Math.random() < 0.5 ? 'chase' : 'roll';
         dog.trick = { type, t: 0, dur: type === 'chase' ? rand(2.2, 3.2) : rand(2.8, 3.8) };
-        if (type === 'chase' && Math.random() < 0.5) say(dog, tr('woof'), 'dog');
+        if (type === 'chase' && Math.random() < 0.5) say(dog, tr('woof'), 'dog', 'woof');
         return;
       }
     }
@@ -2423,14 +2567,14 @@
     // Bahh! (now and then, in a panic when a wolf is close, and in answer to a bark)
     if (s.answerT > 0) {
       s.answerT -= dt;
-      if (s.answerT <= 0) { const b = tr('baaBark'); say(s, b[Math.floor(Math.random() * b.length)], 'sheep'); s.baaT = Math.max(s.baaT, 6); }
+      if (s.answerT <= 0) { const b = tr('baaBark'); say(s, b[Math.floor(Math.random() * b.length)], 'sheep', 'baa', { pitch: sheepPitch(s) }); s.baaT = Math.max(s.baaT, 6); }
     }
     s.baaT -= dt;
     if (state.sheepTalkCD <= 0) {
       if (panic > 0.4 && Math.random() < dt * 1.5) {
-        say(s, tr('baaPanic'), 'sheep'); state.sheepTalkCD = 1.5;
+        say(s, tr('baaPanic'), 'sheep', 'baaPanic', { pitch: sheepPitch(s) }); state.sheepTalkCD = 1.5;
       } else if (s.baaT <= 0) {
-        say(s, tr('baa')[Math.floor(Math.random() * 5)], 'sheep');
+        say(s, tr('baa')[Math.floor(Math.random() * 5)], 'sheep', 'baa', { pitch: sheepPitch(s) });
         state.sheepTalkCD = 2.5;
         s.baaT = rand(12, 35);
       }
@@ -2537,7 +2681,7 @@
           dog.hurtT = 0.6;
           dog.trick = null;
           dog.x += ax * 6; dog.y += ay * 6;            // knocked back a bit
-          say(dog, tr('yelp'), 'dog');
+          say(dog, tr('yelp'), 'dog', 'yelp');
           dog.woofCD = Math.max(dog.woofCD, 1.6);
           addFloat(dog.x, dog.y, tr('energy', C.dogBite), '#ffb3a8');
           w.attackT = 0;
@@ -2547,14 +2691,14 @@
       } else if (w.attackCD <= 0 && dd < C.attackRange && w.eatT <= 0 && !w.feeding && !dogBarking() &&
                  Math.random() < C.attackChance * (w.night ? 1.5 : 1) * dt) {
         w.attackT = 1.4;
-        say(w, tr('growl'), 'wolf');
+        say(w, tr('growl'), 'wolf', 'growl');
       }
 
       // Howl now and then
       w.howlT -= dt;
       if (w.howlT <= 0) {
         if (state.wolfTalkCD <= 0 && w.attackT <= 0) {
-          say(w, tr('howl'), 'wolf');
+          say(w, tr('howl'), 'wolf', 'howl');
           state.wolfTalkCD = 3;
         }
         w.howlT = w.night ? rand(10, 22) : rand(18, 35);
@@ -2745,7 +2889,7 @@
       if (Math.abs(a.x - GATE.cx) > TR.W / 2 + a.r - 2) continue;
       const ahead = (a.y - edge) * dir;
       if (ahead > -6 && ahead < a.r + 8) {
-        if (tractor.honkCD <= 0) { say({ x: GATE.cx, y: Math.max(14, edge) }, tr('honk'), 'tractor'); tractor.honkCD = 2.2; }
+        if (tractor.honkCD <= 0) { say({ x: GATE.cx, y: Math.max(14, edge) }, tr('honk'), 'tractor', 'honk'); tractor.honkCD = 2.2; }
         return true;
       }
     }
@@ -3065,6 +3209,7 @@
         say(F, tr('shovel'), 'farmer');
       } else if (F.mode === 'toBench') {
         F.mode = 'bench'; F.sipT = 2.5;
+        sfx('beerOpen', F);                                   // *pop - pssst*
       } else if (F.mode === 'toRake') {
         F.mode = 'rake'; F.workPh = 0;
         say(F, tr('rakeTime'), 'farmer');
@@ -3187,8 +3332,8 @@
       if (T.gate >= 1) {
         T.mode = 'in'; T.y = -TR.L / 2 - 6;
         showMsg(tr(state.relax ? 'tractorRelax' : 'tractor'), 5.5);
-        say({ x: GATE.cx, y: 16 }, tr('honk'), 'tractor'); T.honkCD = 2;
-        if (!inStable(dog) && dog.woofCD <= 0) { say(dog, tr('woof2'), 'dog'); dog.woofCD = 2; }
+        say({ x: GATE.cx, y: 16 }, tr('honk'), 'tractor', 'honk'); T.honkCD = 2;
+        if (!inStable(dog) && dog.woofCD <= 0) { say(dog, tr('woof2'), 'dog', 'woof2'); dog.woofCD = 2; }
       }
     } else if (T.mode === 'in') {
       if (!tractorBlocked(1)) { T.y += C.speed * dt; T.moving = true; }
@@ -3203,7 +3348,7 @@
       if (!tractorBlocked(-1)) {
         T.y -= C.speed * 0.7 * dt; T.moving = true;
         T.beepT -= dt;
-        if (T.beepT <= 0 && T.y > 20) { say({ x: GATE.cx, y: T.y + TR.L / 2 }, tr('beep'), 'tractor'); T.beepT = 1.6; }
+        if (T.beepT <= 0 && T.y > 20) { say({ x: GATE.cx, y: T.y + TR.L / 2 }, tr('beep'), 'tractor', 'beep'); T.beepT = 1.6; }
       }
       if (T.y < -TR.L / 2 - 8) { T.mode = 'closing'; T.y = -80; }
     } else if (T.mode === 'closing') {
@@ -5209,6 +5354,10 @@
       const oy = hit(U.fast) && pointerDown && can ? 3 : 0, cx = U.fast.x + U.fast.w / 2, cy2 = U.fast.y + oy + U.fast.h / 2;
       ctx.fillStyle = can ? (state.fast ? COL.ink : COL.cream) : '#9a9a90';
       for (const dx of [-7, 1]) { ctx.beginPath(); ctx.moveTo(cx + dx, cy2 - 5); ctx.lineTo(cx + dx + 7, cy2); ctx.lineTo(cx + dx, cy2 + 5); ctx.closePath(); ctx.fill(); }
+      // sound on/off
+      drawButton(U.sound, '', 8, '#3d5a45');
+      const so = hit(U.sound) && pointerDown ? 3 : 0;
+      drawSpeaker(U.sound.x + U.sound.w / 2, U.sound.y + so + U.sound.h / 2, 1, soundPref);
     }
   }
 
@@ -5334,6 +5483,8 @@
       relax: { x: CW / 2 - 175 - 58 - 196, y: 592, w: 196, h: 42 },
       exit: { x: CW - 66, y: 9, w: 56, h: 26 },        // (the PAUSE button in the top bar)
       fast: { x: 446, y: 10, w: 36, h: 24 },            // fast-forward button next to the time bar
+      sound: { x: 488, y: 10, w: 32, h: 24 },           // sound on/off (top bar)
+      soundT: { x: CW - 182, y: 14, w: 48, h: 32 },     // sound on/off (start screen, next to the flags)
       bark: { x: 14, y: CH - 58, w: 86, h: 44 },        // WOOF button (lower left corner of the pasture)
       pResume: { x: CW / 2 - 176, y: CH / 2 + 4, w: 168, h: 48 },
       pExit: { x: CW / 2 + 8, y: CH / 2 + 4, w: 168, h: 48 },
@@ -5389,6 +5540,55 @@
     });
     ctx.globalAlpha = 1;
     pixelText(lang.toUpperCase(), r.x + r.w / 2, fy + fh + 11, 8, sel ? '#ffe27a' : '#a9b9a2', 'center', false);
+  }
+
+  // Sound on/off: a little pixel-art megaphone (20 x 12 "pixels", like the flags),
+  // with sound waves when the sound is on and a red cross when it is off
+  const MEGA = (() => {
+    const body = [
+      '....................',
+      '...........w........',
+      '.........rrw........',
+      '.......rrrrw........',
+      '..rrrrrrrrrw........',
+      '.wrrrrrrrrrw........',
+      '.wRRRRRRRRRw........',
+      '..RRRRRRRRRw........',
+      '....hh.RRRRw........',
+      '....hh...RRw........',
+      '....hh.....w........',
+      '....................',
+    ];
+    const waves = { 2: [16], 3: [17], 4: [14, 18], 5: [15, 18], 6: [15, 18], 7: [14, 18], 8: [17], 9: [16] };
+    const cross = { 3: [14, 18], 4: [15, 17], 5: [16], 6: [15, 17], 7: [14, 18] };
+    const make = (marks, ch) => body.map((row, y) => row.split('').map((c, x) => ((marks[y] || []).includes(x) ? ch : c)));
+    return { on: make(waves, 'y'), off: make(cross, 'x') };
+  })();
+  const MEGA_COL = { '.': '#2f4b39', w: '#f3e4bf', r: '#e5533d', R: '#a8372a', h: '#4a3426', y: '#ffe27a', x: '#ff7a5c' };
+  function drawMegaphone(x, y, px, on, bg = true) {
+    (on ? MEGA.on : MEGA.off).forEach((row, j) => row.forEach((c, i) => {
+      if (c === '.' && !bg) return;
+      ctx.fillStyle = MEGA_COL[c];
+      ctx.fillRect(x + i * px, y + j * px, px, px);
+    }));
+  }
+  // in the top bar (inside a small button)
+  function drawSpeaker(cx, cy, k, on) {
+    drawMegaphone(Math.round(cx - 10), Math.round(cy - 6), 1, on, false);
+  }
+  // on the start screen, next to the flags and in the same style
+  function drawSoundButton(r) {
+    const hov = hit(r), on = soundPref;
+    const px = 2, fw = 20 * px, fh = 12 * px;
+    const fx = Math.round(r.x + (r.w - fw) / 2), fy = Math.round(r.y + (r.h - fh) / 2) - 2;
+    ctx.fillStyle = COL.ink;                                     // chunky shadow
+    ctx.fillRect(fx + 3, fy + 3, fw + 4, fh + 4);
+    ctx.fillStyle = on ? '#ffe27a' : hov ? COL.cream : '#6f7d6a';
+    ctx.fillRect(fx - 2, fy - 2, fw + 4, fh + 4);
+    ctx.globalAlpha = on || hov ? 1 : 0.7;
+    drawMegaphone(fx, fy, px, on);
+    ctx.globalAlpha = 1;
+    pixelText(tr(on ? 'soundBtnOn' : 'soundBtnOff'), r.x + r.w / 2, fy + fh + 11, 8, on ? '#ffe27a' : '#a9b9a2', 'center', false);
   }
 
   function setLang(l) {
@@ -5587,11 +5787,13 @@
     x = kx0;
     x += drawKey(x, y, 'P') + 4;
     x += drawKey(x, y, 'ESC') + 10;
-    x += label(tr('pause'), x, y) + 28;
-    x += drawKey(x, y, 'F') + 10;
-    x += label(tr('fastDay'), x, y) + 28;
-    x += drawKey(x, y, 'W') + 10;
-    label(tr('barkKey'), x, y);
+    x += label(tr('pause'), x, y) + 20;
+    x += drawKey(x, y, 'F') + 8;
+    x += label(tr('fastDay'), x, y) + 20;
+    x += drawKey(x, y, 'W') + 8;
+    x += label(tr('barkKey'), x, y) + 20;
+    x += drawKey(x, y, 'M') + 8;
+    label(tr('soundKey'), x, y);
 
     // right: options
     const R = U.R;
@@ -5684,6 +5886,7 @@
     // language: click a flag
     drawFlagButton(U.langEn, 'en');
     drawFlagButton(U.langDe, 'de');
+    drawSoundButton(U.soundT);
 
     // small print in the corners
     const hy = CH - 14;
@@ -5778,10 +5981,10 @@
   function updateCursor() {
     const U = uiRects();
     let c = PAW_CURSOR;
-    if (state.screen === 'title') c = [...(savedInfo ? [U.resume, U.newGame] : [U.start]), U.shuffle, U.relax, U.minus, U.plus, U.help, U.langEn, U.langDe, ...U.seasons].some(hit) ? PAW_CURSOR_HOVER : PAW_CURSOR;
+    if (state.screen === 'title') c = [...(savedInfo ? [U.resume, U.newGame] : [U.start]), U.shuffle, U.relax, U.minus, U.plus, U.help, U.langEn, U.langDe, U.soundT, ...U.seasons].some(hit) ? PAW_CURSOR_HOVER : PAW_CURSOR;
     else if (state.screen === 'over') c = state.overT > 1 && hit(U.cont) ? PAW_CURSOR_HOVER : PAW_CURSOR;
     else if (state.confirmExit) c = hit(U.yes) || hit(U.no) ? PAW_CURSOR_HOVER : PAW_CURSOR;
-    else if (state.paused ? hit(U.pResume) || hit(U.pExit) : hit(U.exit) || hit(U.fast) || hit(U.bark)) c = PAW_CURSOR_HOVER;
+    else if (state.paused ? hit(U.pResume) || hit(U.pExit) : hit(U.exit) || hit(U.fast) || hit(U.sound) || hit(U.bark)) c = PAW_CURSOR_HOVER;
     if (c !== lastCursor) { canvas.style.cursor = c; lastCursor = c; }
   }
 
@@ -5982,6 +6185,7 @@
       else if (hit(U.help)) window.open('help.html', '_blank');
       else if (hit(U.langEn)) setLang('en');
       else if (hit(U.langDe)) setLang('de');
+      else if (hit(U.soundT)) setSound(!soundPref);
       else U.seasons.forEach((b, i) => { if (hit(b)) setSeasonStart(i); });
       return;
     }
@@ -5998,6 +6202,7 @@
     }
     if (hit(U.exit)) { state.paused = true; state.fast = false; return; }   // PAUSE button
     if (hit(U.fast)) { toggleFast(); return; }
+    if (hit(U.sound)) { setSound(!soundPref); return; }
     if (hit(U.bark)) { bark(); return; }
     held = true;
     canvas.setPointerCapture(e.pointerId);
@@ -6022,6 +6227,7 @@
   }
 
   window.addEventListener('keydown', (e) => {
+    if ((e.key === 'm' || e.key === 'M') && !e.repeat) { setSound(!soundPref); return; }   // sound on/off, everywhere
     if (state.screen === 'title') {
       if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if (savedInfo) resumeGame(); else startGame(); }
       else if (savedInfo && (e.key === 'n' || e.key === 'N')) startGame();
@@ -6083,6 +6289,7 @@
       updateWeather(dt);
       if (state.screen !== 'play') updateStreams(dt);   // keep the water flowing on the menus too
     }
+    updateSound(dt);
     render();
     requestAnimationFrame(frame);
   }
@@ -6090,7 +6297,7 @@
 
   // Handy for debugging in the browser console
   window.weide = {
-    bark, packSize, scheduleDayWolves, blizzardLevel, fogLevel, grassToSeek, nearPatch, flagWind, tractor, planTractor, farmer, dig, rake, deco, job, barrow, HUT, pickAppleTrees, segClear, routeTo, saveGame, resumeGame, get savedInfo() { return savedInfo; },
+    bark, packSize, scheduleDayWolves, get snd() { return SND; }, sfx, blizzardLevel, fogLevel, grassToSeek, nearPatch, flagWind, tractor, planTractor, farmer, dig, rake, deco, job, barrow, HUT, pickAppleTrees, segClear, routeTo, saveGame, resumeGame, get savedInfo() { return savedInfo; },
     state, SEASONS, CLOCK, CFG,
     get sheep() { return sheep; }, get wolves() { return wolves; },
     get dog() { return dog; }, get patches() { return patches; }, mouse, bowl,
